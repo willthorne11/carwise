@@ -1,0 +1,44 @@
+.qrWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: var(--radius);
+}
+
+.secretBox {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.secretLabel {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.secret {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.1rem;
+  word-break: break-all;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  background: rgba(74,222,128,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: var(--success);
+}
