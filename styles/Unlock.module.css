@@ -1,0 +1,124 @@
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.wrap h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.paywallTop { text-align: center; padding: 2rem 0 1.5rem; }
+
+.lockIcon {
+  width: 44px;
+  height: 44px;
+  background: var(--surface2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.paywallTop p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 340px; margin: 0 auto; }
+
+.usedBar { background: var(--surface2); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1.25rem; }
+.usedTop { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.usedTop span:last-child { font-weight: 500; color: var(--text); }
+.usedTrack { height: 6px; background: var(--border2); border-radius: 100px; overflow: hidden; }
+.usedFill { height: 100%; border-radius: 100px; background: var(--accent); width: 100%; }
+
+.priceBox {
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.priceAmount { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; }
+.priceOnce { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.noSub { font-size: 12px; color: var(--success); font-weight: 500; margin-bottom: 4px; }
+.noSubSub { font-size: 12px; color: var(--muted); }
+
+.perks { list-style: none; margin-bottom: 1.25rem; }
+.perks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+.perks li:last-child { border-bottom: none; }
+
+.perkDot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+.nudge { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+.nudge strong { color: var(--text); }
+
+.payBtn { margin-top: 1rem !important; }
+.error { color: var(--danger); font-size: 13px; margin-top: 0.75rem; }
+
+.trustRow { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; }
+.trustItem { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+
+.checkoutHeader { margin-bottom: 1.5rem; }
+.checkoutHeader h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.checkoutHeader p { font-size: 14px; color: var(--muted); }
+
+.orderSummary { background: var(--surface2); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.orderRow { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; color: var(--muted); }
+.orderTotal { font-weight: 500; font-size: 15px; color: var(--text); border-top: 0.5px solid var(--border); margin-top: 6px; padding-top: 10px; }
+
+.checkoutNudge {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.checkoutNudge strong { color: var(--text); }
+
+.successWrap { text-align: center; padding: 3rem 0; }
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  background: rgba(74,222,128,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: var(--success);
+}
+
+.successWrap h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 0.5rem; }
+.successWrap p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 320px; margin: 0 auto 1.5rem; }
+
+.confettiRow { display: flex; justify-content: center; gap: 6px; margin-bottom: 1.5rem; }
+.conf { width: 8px; height: 8px; border-radius: 2px; animation: confetti 1s ease-in-out infinite; }
+.conf:nth-child(1) { background: var(--accent); animation-delay: 0s; }
+.conf:nth-child(2) { background: var(--success); animation-delay: 0.1s; }
+.conf:nth-child(3) { background: var(--accent); animation-delay: 0.2s; }
+.conf:nth-child(4) { background: #60a5fa; animation-delay: 0.3s; }
+.conf:nth-child(5) { background: var(--accent); animation-delay: 0.4s; }
+
+@keyframes confetti {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(180deg); }
+}

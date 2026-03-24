@@ -1,0 +1,145 @@
+import Anthropic from '@anthropic-ai/sdk'
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end()
+
+  const { type, data } = req.body
+
+  try {
+    if (type === 'review') {
+      const { make, model, year, mileage, price, fuel, concerns } = data
+
+      const prompt = `You are Carwise, a no-nonsense UK car buying advisor. A user wants a review of this car:
+
+Make: ${make || 'Unknown'}
+Model: ${model || 'Unknown'}  
+Year: ${year || 'Unknown'}
+Mileage: ${mileage ? mileage + ' miles' : 'Unknown'}
+Asking price: ${price ? '£' + price : 'Unknown'}
+Fuel type: ${fuel || 'Unknown'}
+User concerns: ${concerns || 'None mentioned'}
+
+Return a JSON object with exactly this structure:
+{
+  "verdict": "fair" | "overpriced" | "great_deal",
+  "verdict_label": "Fair price" | "Overpriced" | "Great deal",
+  "verdict_text": "One punchy sentence verdict — direct, honest, no fluff",
+  "overall_score": 0-10,
+  "reliability_score": 0-10,
+  "value_score": 0-10,
+  "running_costs_score": 0-10,
+  "insurance_score": 0-10,
+  "suggested_offer": number (suggested offer price in pounds),
+  "offer_reason": "One sentence on why they can negotiate to this price",
+  "flags": [
+    { "type": "good" | "warn" | "bad", "text": "short flag text" }
+  ],
+  "positives": "2-3 sentences on what is genuinely good about this car",
+  "watch_out": "2-3 sentences on what to check or be careful about",
+  "alternatives": [
+    {
+      "name": "Make Model (Year)",
+      "why": "One line on why it is better or comparable",
+      "price": "~£XXXX"
+    }
+  ],
+  "insurance_groups": {
+    "17_21": "£X,XXX–£X,XXX",
+    "22_25": "£XXX–£X,XXX",
+    "26_35": "£XXX–£XXX",
+    "35_plus": "£XXX–£XXX"
+  },
+  "insurance_group_number": number,
+  "road_tax_annual": number,
+  "road_tax_6month": number,
+  "depreciation_2yr": number,
+  "depreciation_4yr": number,
+  "depreciation_note": "One sentence on depreciation for this model",
+  "owner_rating": number (out of 5),
+  "owner_review_count": number,
+  "owner_reliability": number (out of 5),
+  "owner_running_costs": number (out of 5),
+  "owner_comfort": number (out of 5),
+  "owner_practicality": number (out of 5),
+  "owner_reviews": [
+    {
+      "tenure": "Owner since YEAR · XX,XXX miles",
+      "stars": 1-5,
+      "text": "Realistic owner quote in quotes"
+    }
+  ],
+  "checklist_specific": [
+    { "text": "Check item specific to this exact make/model", "warn": "optional warning text or null" }
+  ]
+}
+
+Be honest. If the car is unreliable, say so. If the price is too high, say so. Use UK pricing and UK context throughout. Return only valid JSON, no markdown.`
+
+      const message = await client.messages.create({
+        model: 'claude-opus-4-6',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+
+      const text = message.content[0].text
+      const clean = text.replace(/```json|```/g, '').trim()
+      const result = JSON.parse(clean)
+
+      return res.status(200).json(result)
+    }
+
+    if (type === 'shortlist') {
+      const { budget, uses, priorities, postcode, fuel, transmission, size } = data
+
+      const prompt = `You are Carwise, a no-nonsense UK car buying advisor. A user wants a shortlist of used cars.
+
+Budget: £${budget}
+How they use the car: ${uses.join(', ')}
+Their priorities: ${priorities.join(', ')}
+Location: ${postcode || 'UK'}
+Fuel preference: ${fuel || 'no preference'}
+Transmission: ${transmission || 'no preference'}
+Number of cars wanted: ${size}
+
+Return a JSON array of exactly ${size} cars. Each car should be the best real-world recommendation for this person. Format:
+[
+  {
+    "rank": 1,
+    "make": "Toyota",
+    "model": "Yaris",
+    "years": "2017–2020",
+    "typical_price": "£7,500–£10,000",
+    "price_midpoint": 8750,
+    "reason": "2-3 sentences — why this car is perfect for this specific person based on their priorities. Conversational, direct.",
+    "tags_good": ["tag1", "tag2", "tag3"],
+    "tags_warn": ["optional warning tag"],
+    "overall_score": 8.5,
+    "reliability_score": 9.0,
+    "running_costs_score": 8.5
+  }
+]
+
+Rank genuinely — put the best match first. Consider reliability, running costs, insurance for their likely profile, and availability in the UK used market at this budget. Return only valid JSON array, no markdown.`
+
+      const message = await client.messages.create({
+        model: 'claude-opus-4-6',
+        max_tokens: 3000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+
+      const text = message.content[0].text
+      const clean = text.replace(/```json|```/g, '').trim()
+      const result = JSON.parse(clean)
+
+      return res.status(200).json(result)
+    }
+
+    return res.status(400).json({ error: 'Invalid type' })
+
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ error: 'Analysis failed', details: err.message })
+  }
+}
