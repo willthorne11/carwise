@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Nav from '../components/Nav'
+import RangeSlider from '../components/RangeSlider'
 import { useAuth } from '../lib/auth'
 import { canUseShortlist, incrementShortlist, getRemaining } from '../lib/usage'
 import styles from '../styles/Shortlist.module.css'
@@ -27,8 +28,7 @@ export default function Shortlist() {
   const router = useRouter()
   const { user } = useAuth()
   const [step, setStep] = useState(1)
-  const [minBudget, setMinBudget] = useState(3000)
-  const [maxBudget, setMaxBudget] = useState(10000)
+  const [budget, setBudget] = useState([3000, 10000])
   const [uses, setUses] = useState([])
   const [priorities, setPriorities] = useState([])
   const [postcode, setPostcode] = useState('')
@@ -39,7 +39,7 @@ export default function Shortlist() {
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
-  const [remaining, setRemaining] = useState({ shortlists: 1, reviews: 5, unlimited: false })
+  const [remaining, setRemaining] = useState({ shortlists: 999, reviews: 999, unlimited: true })
   const loadingRef = useRef(null)
 
   useEffect(() => {
@@ -71,8 +71,6 @@ export default function Shortlist() {
 
   const runShortlist = async () => {
     if (!user) { router.push('/auth?next=/shortlist'); return }
-    const can = await canUseShortlist(user.id)
-    if (!can) { router.push('/unlock'); return }
 
     setLoading(true)
     setError('')
@@ -82,20 +80,16 @@ export default function Shortlist() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'shortlist',
-          data: { minBudget, maxBudget, uses, priorities, postcode, fuel, transmission, size }
+          data: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, postcode, fuel, transmission, size }
         })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      await incrementShortlist(user.id)
-      const rem = await getRemaining(user.id)
-      setRemaining(rem)
 
-      // Save to dashboard
       await fetch('/api/save-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, type: 'shortlist', input: { minBudget, maxBudget, uses, priorities, size }, result: data })
+        body: JSON.stringify({ userId: user.id, type: 'shortlist', input: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, size }, result: data })
       })
 
       setResults(data)
@@ -111,8 +105,7 @@ export default function Shortlist() {
     const make = encodeURIComponent(car.make.toLowerCase())
     const model = encodeURIComponent(car.model.toLowerCase().replace(/\s+/g, '-'))
     const yearFrom = car.years ? car.years.split('–')[0] : ''
-    const pc = postcode || ''
-    return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${yearFrom}&price-to=${maxBudget}&postcode=${pc}&radius=50`
+    return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${yearFrom}&price-to=${budget[1]}&postcode=${postcode || ''}&radius=50`
   }
 
   if (loading) return (
@@ -140,7 +133,7 @@ export default function Shortlist() {
         <div className={styles.resultsHeader}>
           <p className="label">Your shortlist</p>
           <h2>Top {size} cars for you</h2>
-          <p className={styles.resultsSub}>Budget £{minBudget.toLocaleString()}–£{maxBudget.toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}</p>
+          <p className={styles.resultsSub}>Budget £{budget[0].toLocaleString()}–£{budget[1].toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}</p>
         </div>
         {results.map(car => (
           <div key={car.rank} className={styles.carCard}>
@@ -168,12 +161,6 @@ export default function Shortlist() {
             </div>
           </div>
         ))}
-        {!remaining.unlimited && remaining.shortlists <= 0 && (
-          <div className={styles.usedUp}>
-            <p>You've used your free shortlist.</p>
-            <button className="btn-primary" onClick={() => router.push('/unlock')}>Unlock unlimited for £7.99 →</button>
-          </div>
-        )}
         <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null) }}>← New search</button>
       </div>
     </div>
@@ -193,22 +180,14 @@ export default function Shortlist() {
           <div>
             <p className="label">Step 1 of 5</p>
             <h2>What's your budget?</h2>
-            <p className={styles.sub}>Set your minimum and maximum spend.</p>
-            <div className={styles.budgetDisplay}>
-              <span>£{minBudget.toLocaleString()}</span>
-              <span className={styles.budgetDash}>—</span>
-              <span>£{maxBudget.toLocaleString()}</span>
-            </div>
-            <div className={styles.dualSlider}>
-              <div className={styles.sliderLabel}><span>Min budget</span><span>£{minBudget.toLocaleString()}</span></div>
-              <input type="range" min="1000" max="49000" step="500" value={minBudget}
-                onChange={e => { const v = parseInt(e.target.value); if (v < maxBudget - 1000) setMinBudget(v) }}
-                className={styles.slider} />
-              <div className={styles.sliderLabel}><span>Max budget</span><span>£{maxBudget.toLocaleString()}</span></div>
-              <input type="range" min="2000" max="50000" step="500" value={maxBudget}
-                onChange={e => { const v = parseInt(e.target.value); if (v > minBudget + 1000) setMaxBudget(v) }}
-                className={styles.slider} />
-            </div>
+            <p className={styles.sub}>Drag both handles to set your min and max spend.</p>
+            <RangeSlider
+              min={1000}
+              max={50000}
+              step={500}
+              value={budget}
+              onChange={setBudget}
+            />
             <div className={styles.sliderBounds}><span>£1,000</span><span>£50,000</span></div>
             <button className="btn-primary" onClick={() => setStep(2)}>Next →</button>
           </div>
@@ -305,9 +284,6 @@ export default function Shortlist() {
               <button className="btn-ghost" onClick={() => setStep(4)}>← Back</button>
               <button className="btn-primary" onClick={runShortlist}>Build my shortlist →</button>
             </div>
-            <p className={styles.searchesLeft}>
-              {!user ? 'Sign in to save your searches' : remaining.unlimited ? 'Unlimited searches' : `${remaining.shortlists} free shortlist${remaining.shortlists !== 1 ? 's' : ''} remaining`}
-            </p>
           </div>
         )}
       </div>
