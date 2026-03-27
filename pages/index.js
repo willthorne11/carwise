@@ -6,9 +6,7 @@ export default function Home() {
   return (
     <div>
       <Nav />
-
       <main>
-        {/* Hero */}
         <section className={styles.hero}>
           <div className={styles.badge}>
             <span className={styles.dot}></span>
@@ -16,32 +14,20 @@ export default function Home() {
           </div>
           <h1>Stop getting<br /><em>ripped off</em><br />buying a used car</h1>
           <p className={styles.sub}>
-            Most buyers overpay by £1,000–£3,000. Carwise gives you an instant shortlist of the best cars available right now — and an honest review of any car you're considering.
+            Most buyers overpay by £1,000–£3,000. Carwise gives you an instant shortlist of the best cars available to you right now — and an honest verdict on any car you're considering.
           </p>
-
           <div className={styles.statBar}>
-            <div className={styles.stat}>
-              <div className={styles.statNum}>£1,847</div>
-              <div className={styles.statLabel}>avg. overpaid</div>
-            </div>
-            <div className={styles.stat}>
-              <div className={styles.statNum}>60 sec</div>
-              <div className={styles.statLabel}>to your shortlist</div>
-            </div>
-            <div className={styles.stat}>
-              <div className={styles.statNum}>100%</div>
-              <div className={styles.statLabel}>plain English</div>
-            </div>
+            <div className={styles.stat}><div className={styles.statNum}>£1,847</div><div className={styles.statLabel}>avg. overpaid</div></div>
+            <div className={styles.stat}><div className={styles.statNum}>60 sec</div><div className={styles.statLabel}>to your shortlist</div></div>
+            <div className={styles.stat}><div className={styles.statNum}>100%</div><div className={styles.statLabel}>plain English</div></div>
           </div>
-
           <div className={styles.ctaRow}>
             <Link href="/shortlist" className={styles.btnPrimary}>Build my shortlist</Link>
             <Link href="/review" className={styles.btnSecondary}>Review a car</Link>
           </div>
-          <p className={styles.freeTag}>No account needed. No card required.</p>
+          <p className={styles.freeTag}>No card required. Free to start.</p>
         </section>
 
-        {/* Products */}
         <section className={styles.section}>
           <p className={styles.sectionLabel}>What we do</p>
           <div className={styles.products}>
@@ -56,7 +42,7 @@ export default function Home() {
             </div>
             <div className={styles.productCard}>
               <div className={styles.productTitle}>The Review</div>
-              <p className={styles.productDesc}>Found a car you like? Paste the listing or enter the details. Instant verdict on price, reliability, red flags — plus better alternatives at the same budget.</p>
+              <p className={styles.productDesc}>Found a car you like? Enter the details and get an instant verdict on price, reliability, red flags — plus better alternatives at the same budget.</p>
               <div className={styles.tags}>
                 <span className={styles.tag}>Any listing</span>
                 <span className={styles.tag}>Red flags</span>
@@ -66,28 +52,23 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How it works */}
         <section className={styles.section} id="how-it-works">
           <p className={styles.sectionLabel}>How it works</p>
           <div className={styles.steps}>
             {[
-              { n: '01', title: 'Tell us what you need', desc: 'Budget, lifestyle, priorities — takes about 60 seconds. Or paste a listing you already found.' },
-              { n: '02', title: 'We analyse the market', desc: 'We cross-reference pricing data, reliability records, common faults, and what\'s available near you right now.' },
-              { n: '03', title: 'Get your shortlist or verdict', desc: 'Clear, honest, plain English. Every car in your shortlist has a one-click review option so you can dig deeper.' },
+              { n: '01', title: 'Tell us what you need', desc: 'Budget, lifestyle, priorities — takes about 60 seconds. Or enter a car you already found.' },
+              { n: '02', title: 'We analyse the market', desc: 'We cross-reference pricing data, reliability records, common faults, and what\'s available to you right now.' },
+              { n: '03', title: 'Get your shortlist or verdict', desc: 'Clear, honest, plain English. Every car in your shortlist has a one-click review option.' },
               { n: '04', title: 'Buy with confidence', desc: 'Walk into every viewing knowing exactly what the car is worth, what to check, and what to walk away from.' },
             ].map(s => (
               <div key={s.n} className={styles.step}>
                 <div className={styles.stepNum}>{s.n}</div>
-                <div>
-                  <h4>{s.title}</h4>
-                  <p>{s.desc}</p>
-                </div>
+                <div><h4>{s.title}</h4><p>{s.desc}</p></div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Pricing */}
         <section className={styles.section} id="pricing">
           <p className={styles.sectionLabel}>Pricing</p>
           <div className={styles.pricingBox}>
@@ -120,16 +101,23 @@ export default function Home() {
               <Link href="/shortlist" className={styles.btnPrimary} style={{maxWidth: '280px', display: 'block', margin: '0 auto', textAlign: 'center'}}>
                 Start for free
               </Link>
-              <p className={styles.pricingNudge}>
-                You're about to spend £5,000+ on a car. <strong>This costs less than a coffee.</strong>
-              </p>
+              <p className={styles.pricingNudge}>You're about to spend £5,000+ on a car. <strong>This costs less than a coffee.</strong></p>
             </div>
+          </div>
+        </section>
+
+        <section className={styles.section} id="support" style={{paddingTop: 0}}>
+          <div className={styles.supportBox}>
+            <div className={styles.supportTitle}>Need help?</div>
+            <p className={styles.supportText}>Got a question or something not working? We're here.</p>
+            <a href="mailto:help@carwise.site" className={styles.supportEmail}>help@carwise.site</a>
           </div>
         </section>
       </main>
 
       <footer className={styles.footer}>
         <p>Built to stop you getting ripped off. <strong>Carwise</strong> — know before you buy.</p>
+        <p style={{marginTop: '0.5rem'}}><a href="mailto:help@carwise.site" style={{color: 'var(--muted)', fontSize: '13px'}}>help@carwise.site</a></p>
       </footer>
     </div>
   )
