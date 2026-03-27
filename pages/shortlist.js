@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Nav from '../components/Nav'
-import { canUseShortlist, incrementShortlist, getRemainingShortlists } from '../lib/usage'
+import { useAuth } from '../lib/auth'
+import { canUseShortlist, incrementShortlist, getRemaining } from '../lib/usage'
 import styles from '../styles/Shortlist.module.css'
 
 const USES = [
@@ -11,12 +12,23 @@ const USES = [
   { val: 'firstcar', title: 'First car', sub: 'Easy, cheap to insure' },
 ]
 
-const PRIORITIES = ['Reliability', 'Low running costs', 'Cheap insurance', 'Looks good', 'Boot space', 'Fuel economy', 'Performance', 'Comfort']
+const PRIORITIES = ['Reliability','Low running costs','Cheap insurance','Looks good','Boot space','Fuel economy','Performance','Comfort']
+
+const LOADING_MSGS = [
+  'Scanning the used car market...',
+  'Checking reliability records...',
+  'Analysing pricing data...',
+  'Matching cars to your priorities...',
+  'Ranking your best options...',
+  'Almost there...'
+]
 
 export default function Shortlist() {
   const router = useRouter()
+  const { user } = useAuth()
   const [step, setStep] = useState(1)
-  const [budget, setBudget] = useState(8000)
+  const [minBudget, setMinBudget] = useState(3000)
+  const [maxBudget, setMaxBudget] = useState(10000)
   const [uses, setUses] = useState([])
   const [priorities, setPriorities] = useState([])
   const [postcode, setPostcode] = useState('')
@@ -24,15 +36,30 @@ export default function Shortlist() {
   const [transmission, setTransmission] = useState('')
   const [size, setSize] = useState(5)
   const [loading, setLoading] = useState(false)
+  const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
-  const [remaining, setRemaining] = useState(1)
+  const [remaining, setRemaining] = useState({ shortlists: 1, reviews: 5, unlimited: false })
+  const loadingRef = useRef(null)
 
-  useEffect(() => { setRemaining(getRemainingShortlists()) }, [])
+  useEffect(() => {
+    if (user) getRemaining(user.id).then(setRemaining)
+  }, [user])
 
-  const toggleUse = (val) => {
-    setUses(prev => prev.includes(val) ? prev.filter(u => u !== val) : [...prev, val])
-  }
+  useEffect(() => {
+    if (loading) {
+      let i = 0
+      loadingRef.current = setInterval(() => {
+        i = (i + 1) % LOADING_MSGS.length
+        setLoadingMsg(LOADING_MSGS[i])
+      }, 1800)
+    } else {
+      clearInterval(loadingRef.current)
+    }
+    return () => clearInterval(loadingRef.current)
+  }, [loading])
+
+  const toggleUse = (val) => setUses(prev => prev.includes(val) ? prev.filter(u => u !== val) : [...prev, val])
 
   const togglePriority = (val) => {
     if (priorities.includes(val)) {
@@ -43,10 +70,10 @@ export default function Shortlist() {
   }
 
   const runShortlist = async () => {
-    if (!canUseShortlist()) {
-      router.push('/unlock')
-      return
-    }
+    if (!user) { router.push('/auth?next=/shortlist'); return }
+    const can = await canUseShortlist(user.id)
+    if (!can) { router.push('/unlock'); return }
+
     setLoading(true)
     setError('')
     try {
@@ -55,13 +82,22 @@ export default function Shortlist() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'shortlist',
-          data: { budget, uses, priorities, postcode, fuel, transmission, size }
+          data: { minBudget, maxBudget, uses, priorities, postcode, fuel, transmission, size }
         })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      incrementShortlist()
-      setRemaining(getRemainingShortlists())
+      await incrementShortlist(user.id)
+      const rem = await getRemaining(user.id)
+      setRemaining(rem)
+
+      // Save to dashboard
+      await fetch('/api/save-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, type: 'shortlist', input: { minBudget, maxBudget, uses, priorities, size }, result: data })
+      })
+
       setResults(data)
       setStep('results')
     } catch (e) {
@@ -71,22 +107,28 @@ export default function Shortlist() {
     }
   }
 
-  const reviewCar = (car) => {
-    const params = new URLSearchParams({
-      make: car.make,
-      model: car.model,
-      year: car.years.split('–')[0],
-      price: car.price_midpoint
-    })
-    router.push(`/review?${params}`)
+  const buildAutoTraderUrl = (car) => {
+    const make = encodeURIComponent(car.make.toLowerCase())
+    const model = encodeURIComponent(car.model.toLowerCase().replace(/\s+/g, '-'))
+    const yearFrom = car.years ? car.years.split('–')[0] : ''
+    const pc = postcode || ''
+    return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${yearFrom}&price-to=${maxBudget}&postcode=${pc}&radius=50`
   }
 
   if (loading) return (
     <div>
       <Nav />
       <div className={styles.loadingWrap}>
-        <div className="spinner"></div>
-        <p>Finding your perfect cars...</p>
+        <div className={styles.loadingInner}>
+          <div className={styles.spinnerWrap}>
+            <svg className={styles.spinner} viewBox="0 0 50 50">
+              <circle className={styles.spinnerTrack} cx="25" cy="25" r="20" fill="none" strokeWidth="4"/>
+              <circle className={styles.spinnerArc} cx="25" cy="25" r="20" fill="none" strokeWidth="4"/>
+            </svg>
+          </div>
+          <p className={styles.loadingMsg}>{loadingMsg}</p>
+          <p className={styles.loadingHint}>Powered by Claude AI</p>
+        </div>
       </div>
     </div>
   )
@@ -98,7 +140,7 @@ export default function Shortlist() {
         <div className={styles.resultsHeader}>
           <p className="label">Your shortlist</p>
           <h2>Top {size} cars for you</h2>
-          <p className={styles.resultsSub}>Budget up to £{budget.toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}</p>
+          <p className={styles.resultsSub}>Budget £{minBudget.toLocaleString()}–£{maxBudget.toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}</p>
         </div>
         {results.map(car => (
           <div key={car.rank} className={styles.carCard}>
@@ -115,22 +157,24 @@ export default function Shortlist() {
               {car.tags_good?.map(t => <span key={t} className="chip chip-good">{t}</span>)}
               {car.tags_warn?.map(t => <span key={t} className="chip chip-warn">{t}</span>)}
             </div>
-            <button className={styles.reviewBtn} onClick={() => reviewCar(car)}>
-              Review this car →
-            </button>
+            <div className={styles.carActions}>
+              <button className={styles.reviewBtn} onClick={() => {
+                const params = new URLSearchParams({ make: car.make, model: car.model, year: car.years?.split('–')[0] || '', price: car.price_midpoint || '' })
+                router.push(`/review?${params}`)
+              }}>Review this car →</button>
+              <a href={buildAutoTraderUrl(car)} target="_blank" rel="noreferrer" className={styles.atBtn}>
+                Find on AutoTrader →
+              </a>
+            </div>
           </div>
         ))}
-        {remaining <= 0 && (
+        {!remaining.unlimited && remaining.shortlists <= 0 && (
           <div className={styles.usedUp}>
             <p>You've used your free shortlist.</p>
-            <button className="btn-primary" onClick={() => router.push('/unlock')}>
-              Unlock unlimited for £7.99 →
-            </button>
+            <button className="btn-primary" onClick={() => router.push('/unlock')}>Unlock unlimited for £7.99 →</button>
           </div>
         )}
-        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null) }}>
-          ← New search
-        </button>
+        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null) }}>← New search</button>
       </div>
     </div>
   )
@@ -149,11 +193,23 @@ export default function Shortlist() {
           <div>
             <p className="label">Step 1 of 5</p>
             <h2>What's your budget?</h2>
-            <p className={styles.sub}>Drag to set your maximum spend on a used car.</p>
-            <div className={styles.budgetDisplay}>£{budget.toLocaleString()}</div>
-            <input type="range" min="1000" max="30000" step="500" value={budget}
-              onChange={e => setBudget(parseInt(e.target.value))} className={styles.slider} />
-            <div className={styles.sliderLabels}><span>£1,000</span><span>£30,000</span></div>
+            <p className={styles.sub}>Set your minimum and maximum spend.</p>
+            <div className={styles.budgetDisplay}>
+              <span>£{minBudget.toLocaleString()}</span>
+              <span className={styles.budgetDash}>—</span>
+              <span>£{maxBudget.toLocaleString()}</span>
+            </div>
+            <div className={styles.dualSlider}>
+              <div className={styles.sliderLabel}><span>Min budget</span><span>£{minBudget.toLocaleString()}</span></div>
+              <input type="range" min="1000" max="49000" step="500" value={minBudget}
+                onChange={e => { const v = parseInt(e.target.value); if (v < maxBudget - 1000) setMinBudget(v) }}
+                className={styles.slider} />
+              <div className={styles.sliderLabel}><span>Max budget</span><span>£{maxBudget.toLocaleString()}</span></div>
+              <input type="range" min="2000" max="50000" step="500" value={maxBudget}
+                onChange={e => { const v = parseInt(e.target.value); if (v > minBudget + 1000) setMaxBudget(v) }}
+                className={styles.slider} />
+            </div>
+            <div className={styles.sliderBounds}><span>£1,000</span><span>£50,000</span></div>
             <button className="btn-primary" onClick={() => setStep(2)}>Next →</button>
           </div>
         )}
@@ -165,8 +221,7 @@ export default function Shortlist() {
             <p className={styles.sub}>Pick everything that applies.</p>
             <div className={styles.optGrid}>
               {USES.map(u => (
-                <button key={u.val} className={`${styles.opt} ${uses.includes(u.val) ? styles.selected : ''}`}
-                  onClick={() => toggleUse(u.val)}>
+                <button key={u.val} className={`${styles.opt} ${uses.includes(u.val) ? styles.selected : ''}`} onClick={() => toggleUse(u.val)}>
                   <div className={styles.optTitle}>{u.title}</div>
                   <div className={styles.optSub}>{u.sub}</div>
                 </button>
@@ -186,8 +241,7 @@ export default function Shortlist() {
             <p className={styles.sub}>Pick up to 3 priorities.</p>
             <div className={styles.chips}>
               {PRIORITIES.map(p => (
-                <button key={p} className={`${styles.chip} ${priorities.includes(p) ? styles.chipSelected : ''}`}
-                  onClick={() => togglePriority(p)}>{p}</button>
+                <button key={p} className={`${styles.chip} ${priorities.includes(p) ? styles.chipSelected : ''}`} onClick={() => togglePriority(p)}>{p}</button>
               ))}
             </div>
             <div className={styles.nav}>
@@ -204,8 +258,7 @@ export default function Shortlist() {
             <p className={styles.sub}>Optional but helps us narrow it down.</p>
             <div className="field">
               <label>Your postcode (first part only)</label>
-              <input type="text" placeholder="e.g. TN30" value={postcode}
-                onChange={e => setPostcode(e.target.value)} maxLength={5} />
+              <input type="text" placeholder="e.g. TN30" value={postcode} onChange={e => setPostcode(e.target.value)} maxLength={5} />
             </div>
             <div className="row2">
               <div className="field">
@@ -241,8 +294,7 @@ export default function Shortlist() {
             <p className={styles.sub}>We'll rank them best to worst for your situation.</p>
             <div className={styles.sizeOpts}>
               {[3, 5, 10].map(n => (
-                <div key={n} className={`${styles.sizeOpt} ${size === n ? styles.sizeSelected : ''}`}
-                  onClick={() => setSize(n)}>
+                <div key={n} className={`${styles.sizeOpt} ${size === n ? styles.sizeSelected : ''}`} onClick={() => setSize(n)}>
                   <div className={styles.sizeNum}>{n}</div>
                   <div className={styles.sizeLabel}>{n === 3 ? 'Quick pick' : n === 5 ? 'Recommended' : 'Full list'}</div>
                 </div>
@@ -254,7 +306,7 @@ export default function Shortlist() {
               <button className="btn-primary" onClick={runShortlist}>Build my shortlist →</button>
             </div>
             <p className={styles.searchesLeft}>
-              {remaining > 0 ? `${remaining} free shortlist remaining` : 'No free shortlists left'}
+              {!user ? 'Sign in to save your searches' : remaining.unlimited ? 'Unlimited searches' : `${remaining.shortlists} free shortlist${remaining.shortlists !== 1 ? 's' : ''} remaining`}
             </p>
           </div>
         )}
