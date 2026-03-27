@@ -1,254 +1,134 @@
-.wrap {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
+.wrap { max-width: 560px; margin: 0 auto; padding: 2rem 1.5rem; }
+.wrap h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin: 0.5rem 0 0.4rem; }
+.sub { font-size: 14px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
 
-.wrap h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0.5rem 0 0.4rem;
-}
-
-.sub {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 1.25rem;
-  line-height: 1.6;
-}
-
-.progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2rem;
-}
-
-.pStep {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+.loadingWrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
-  border: 0.5px solid var(--border2);
-  color: var(--muted);
-  transition: all 0.2s;
-  flex-shrink: 0;
+  min-height: 70vh;
 }
 
+.loadingInner { text-align: center; }
+
+.spinnerWrap { margin: 0 auto 1.5rem; width: 56px; height: 56px; }
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate { 100% { transform: rotate(360deg); } }
+
+.spinnerTrack { stroke: var(--border2); }
+
+.spinnerArc {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dasharray: 80, 200;
+  stroke-dashoffset: 0;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes dash {
+  0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 89, 200; stroke-dashoffset: -35px; }
+  100% { stroke-dasharray: 89, 200; stroke-dashoffset: -124px; }
+}
+
+.loadingMsg {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  transition: opacity 0.3s;
+}
+
+.loadingHint { font-size: 12px; color: var(--muted); }
+
+.progress { display: flex; align-items: center; gap: 8px; margin-bottom: 2rem; }
+.pStep { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; border: 0.5px solid var(--border2); color: var(--muted); transition: all 0.2s; flex-shrink: 0; }
 .active { background: var(--accent); border-color: var(--accent); color: #000; }
 .done { background: rgba(74,222,128,0.2); border-color: rgba(74,222,128,0.4); color: var(--success); }
 
 .budgetDisplay {
   font-family: 'Syne', sans-serif;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.slider {
-  width: 100%;
-  margin-bottom: 0.5rem;
-  accent-color: var(--accent);
-}
+.budgetDash { color: var(--muted); font-weight: 300; }
 
-.sliderLabels {
+.dualSlider { margin-bottom: 0.5rem; }
+
+.sliderLabel {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
   color: var(--muted);
-  margin-bottom: 1.5rem;
-}
-
-.optGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 1.5rem;
-}
-
-.opt {
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 0.9rem 1rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: left;
-}
-
-.opt:hover { border-color: var(--text); }
-.selected { border: 2px solid var(--accent) !important; }
-
-.optTitle { font-size: 14px; font-weight: 500; margin-bottom: 2px; color: var(--text); }
-.optSub { font-size: 12px; color: var(--muted); }
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 1.5rem;
-}
-
-.chip {
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius-full);
-  padding: 6px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
-  color: var(--text);
-}
-
-.chip:hover { border-color: var(--text); }
-.chipSelected { border: 2px solid var(--accent) !important; }
-
-.sizeOpts {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 1.5rem;
-}
-
-.sizeOpt {
-  flex: 1;
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 1rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  background: var(--surface);
-}
-
-.sizeOpt:hover { border-color: var(--text); }
-.sizeSelected { border: 2px solid var(--accent) !important; }
-
-.sizeNum { font-size: 28px; font-weight: 500; }
-.sizeLabel { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-.nav {
-  display: flex;
-  gap: 10px;
-  margin-top: 0.5rem;
-}
-
-.nav .btn-ghost { flex: 0 0 auto; width: auto; padding: 0.75rem 1.25rem; }
-.nav .btn-primary { flex: 1; }
-
-.searchesLeft {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
+  margin-bottom: 4px;
   margin-top: 0.75rem;
 }
 
-.error {
-  color: var(--danger);
-  font-size: 13px;
-  margin-bottom: 0.75rem;
-}
+.slider { width: 100%; accent-color: var(--accent); margin-bottom: 0.25rem; }
 
-.loadingWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  gap: 1rem;
-}
+.sliderBounds { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 1.5rem; }
 
-.loadingWrap p { font-size: 14px; color: var(--muted); }
+.optGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+.opt { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1rem; cursor: pointer; transition: all 0.15s; text-align: left; }
+.opt:hover { border-color: var(--text); }
+.selected { border: 2px solid var(--accent) !important; }
+.optTitle { font-size: 14px; font-weight: 500; margin-bottom: 2px; color: var(--text); }
+.optSub { font-size: 12px; color: var(--muted); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+.chip { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
+.chip:hover { border-color: var(--text); }
+.chipSelected { border: 2px solid var(--accent) !important; }
+
+.sizeOpts { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+.sizeOpt { flex: 1; border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 1rem; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--surface); }
+.sizeOpt:hover { border-color: var(--text); }
+.sizeSelected { border: 2px solid var(--accent) !important; }
+.sizeNum { font-size: 28px; font-weight: 500; }
+.sizeLabel { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.nav { display: flex; gap: 10px; margin-top: 0.5rem; }
+.nav .btn-ghost { flex: 0 0 auto; width: auto; padding: 0.75rem 1.25rem; }
+.nav .btn-primary { flex: 1; }
+
+.searchesLeft { font-size: 12px; color: var(--muted); text-align: center; margin-top: 0.75rem; }
+.error { color: var(--danger); font-size: 13px; margin-bottom: 0.75rem; }
 
 .resultsHeader { margin-bottom: 1.5rem; }
 .resultsHeader h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin: 0.25rem 0; }
 .resultsSub { font-size: 14px; color: var(--muted); }
 
-.carCard {
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.1rem;
-  margin-bottom: 0.75rem;
-  transition: border-color 0.15s;
-}
-
+.carCard { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 0.75rem; transition: border-color 0.15s; }
 .carCard:hover { border-color: var(--border2); }
 
-.carTop {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.carRank {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #000;
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
+.carTop { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.carRank { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #000; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .carInfo { flex: 1; }
 .carName { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
 .carMeta { font-size: 12px; color: var(--muted); }
+.carScore { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); }
 
-.carScore {
-  font-family: 'Syne', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--accent);
-}
+.carReason { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; padding: 8px 10px; background: var(--surface2); border-radius: var(--radius-sm); }
+.carTags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 
-.carReason {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-}
+.carActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-.carTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.reviewBtn {
-  width: 100%;
-  background: transparent;
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius-full);
-  padding: 0.5rem;
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--muted);
-  transition: all 0.15s;
-}
-
+.reviewBtn { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 0.5rem; font-size: 13px; cursor: pointer; color: var(--muted); transition: all 0.15s; font-family: inherit; }
 .reviewBtn:hover { border-color: var(--accent); color: var(--text); }
 
-.usedUp {
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  text-align: center;
-  margin-top: 1rem;
-}
+.atBtn { display: block; text-align: center; background: transparent; border: 0.5px solid rgba(232,255,71,0.3); border-radius: var(--radius-full); padding: 0.5rem; font-size: 13px; color: var(--accent); transition: all 0.15s; }
+.atBtn:hover { background: rgba(232,255,71,0.08); }
 
+.usedUp { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1rem; }
 .usedUp p { font-size: 14px; color: var(--muted); margin-bottom: 1rem; }
