@@ -1,0 +1,86 @@
+.wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.header { margin-bottom: 1.5rem; }
+
+.header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0.4rem 0;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.error {
+  background: rgba(248,113,113,0.1);
+  border: 0.5px solid rgba(248,113,113,0.3);
+  color: var(--danger);
+  font-size: 13px;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.directEmail {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 1rem 0;
+}
+
+.directEmail a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.directEmail a:hover { text-decoration: underline; }
+
+.successCard {
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  text-align: center;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  background: rgba(74,222,128,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: var(--success);
+}
+
+.successCard h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.successCard p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
