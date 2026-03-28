@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       const prompt = `You are Carwise, a no-nonsense UK car buying advisor. A user wants a review of this car:
 
 Make: ${make || 'Unknown'}
-Model: ${model || 'Unknown'}  
+Model: ${model || 'Unknown'}
 Year: ${year || 'Unknown'}
 Mileage: ${mileage ? mileage + ' miles' : 'Unknown'}
 Asking price: ${price ? '£' + price : 'Unknown'}
@@ -86,16 +86,16 @@ Be honest. If the car is unreliable, say so. If the price is too high, say so. U
       const text = message.content[0].text
       const clean = text.replace(/```json|```/g, '').trim()
       const result = JSON.parse(clean)
-
       return res.status(200).json(result)
     }
 
     if (type === 'shortlist') {
-      const { budget, uses, priorities, postcode, fuel, transmission, size } = data
+      const { minBudget, maxBudget, uses, priorities, postcode, fuel, transmission, size } = data
 
       const prompt = `You are Carwise, a no-nonsense UK car buying advisor. A user wants a shortlist of used cars.
 
-Budget: £${budget}
+STRICT BUDGET: £${minBudget} to £${maxBudget}. This is non-negotiable. EVERY car you recommend MUST be commonly available in the UK used car market within this exact price range right now. Do NOT recommend cars that are typically priced above £${maxBudget}. If the budget is low (under £5,000) recommend older, high-mileage but reliable cars that genuinely sell in this range.
+
 How they use the car: ${uses.join(', ')}
 Their priorities: ${priorities.join(', ')}
 Location: ${postcode || 'UK'}
@@ -103,25 +103,27 @@ Fuel preference: ${fuel || 'no preference'}
 Transmission: ${transmission || 'no preference'}
 Number of cars wanted: ${size}
 
-Return a JSON array of exactly ${size} cars. Each car should be the best real-world recommendation for this person. Format:
+Return a JSON array of exactly ${size} cars. Each car must be genuinely available within the £${minBudget}–£${maxBudget} budget in the UK used market. Format:
 [
   {
     "rank": 1,
     "make": "Toyota",
     "model": "Yaris",
-    "years": "2017–2020",
-    "typical_price": "£7,500–£10,000",
-    "price_midpoint": 8750,
-    "reason": "2-3 sentences — why this car is perfect for this specific person based on their priorities. Conversational, direct.",
-    "tags_good": ["tag1", "tag2", "tag3"],
-    "tags_warn": ["optional warning tag"],
+    "years": "2010–2014",
+    "typical_price": "£${minBudget}–£${maxBudget}",
+    "price_midpoint": ${Math.round((minBudget + maxBudget) / 2)},
+    "reason": "2-3 sentences — why this car fits this budget and this person's priorities. Be specific about why it works at this price point.",
+    "tags_good": ["tag1", "tag2"],
+    "tags_warn": ["optional warning"],
     "overall_score": 8.5,
     "reliability_score": 9.0,
     "running_costs_score": 8.5
   }
 ]
 
-Rank genuinely — put the best match first. Consider reliability, running costs, insurance for their likely profile, and availability in the UK used market at this budget. Return only valid JSON array, no markdown.`
+CRITICAL: The typical_price field must show prices within the user's budget range of £${minBudget}–£${maxBudget}. The years field must reflect what you'd realistically find at this price — for low budgets this means older cars with higher mileage. Be honest about the age and condition of cars in this price bracket.
+
+Return only valid JSON array, no markdown.`
 
       const message = await client.messages.create({
         model: 'claude-opus-4-6',
@@ -132,7 +134,6 @@ Rank genuinely — put the best match first. Consider reliability, running costs
       const text = message.content[0].text
       const clean = text.replace(/```json|```/g, '').trim()
       const result = JSON.parse(clean)
-
       return res.status(200).json(result)
     }
 
