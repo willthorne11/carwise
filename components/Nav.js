@@ -11,14 +11,15 @@ export default function Nav() {
         Car<span>wise</span>
       </Link>
       <div className={styles.links}>
-        <Link href="/#how-it-works">How it works</Link>
+        <Link href="/shortlist">Shortlist</Link>
         <Link href="/#pricing">Pricing</Link>
         <Link href="/support">Support</Link>
         {user ? (
-          <Link href="/dashboard" className={styles.cta}>My account</Link>
+          <Link href="/dashboard" className={styles.ctaSecondary}>My account</Link>
         ) : (
-          <Link href="/auth" className={styles.cta}>Get started free</Link>
+          <Link href="/auth" className={styles.ctaSecondary}>Sign in</Link>
         )}
+        <Link href="/review" className={styles.cta}>Review a car</Link>
       </div>
     </nav>
   )
