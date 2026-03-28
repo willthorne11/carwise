@@ -13,6 +13,7 @@ export default function Nav() {
       <div className={styles.links}>
         <Link href="/#how-it-works">How it works</Link>
         <Link href="/#pricing">Pricing</Link>
+        <Link href="/support">Support</Link>
         {user ? (
           <Link href="/dashboard" className={styles.cta}>My account</Link>
         ) : (
