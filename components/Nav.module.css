@@ -21,7 +21,7 @@
 
 .links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
 }
 
@@ -29,9 +29,18 @@
   color: var(--muted);
   font-size: 14px;
   transition: color 0.2s;
+  text-decoration: none;
 }
 
 .links a:hover { color: var(--text); }
+
+.ctaSecondary {
+  color: var(--muted) !important;
+  font-size: 14px;
+  transition: color 0.2s !important;
+}
+
+.ctaSecondary:hover { color: var(--text) !important; }
 
 .cta {
   background: var(--accent) !important;
@@ -39,12 +48,15 @@
   padding: 0.5rem 1.25rem;
   border-radius: var(--radius-full);
   font-weight: 500;
+  font-size: 14px;
   transition: opacity 0.2s !important;
+  text-decoration: none;
 }
 
 .cta:hover { opacity: 0.85; }
 
 @media (max-width: 600px) {
   .nav { padding: 1rem 1.5rem; }
-  .links a:not(.cta) { display: none; }
+  .links a:not(.cta):not(.ctaSecondary) { display: none; }
+  .ctaSecondary { display: none !important; }
 }
