@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import Nav from '../components/Nav'
 import RangeSlider from '../components/RangeSlider'
 import { useAuth } from '../lib/auth'
-import { canUseShortlist, incrementShortlist, getRemaining } from '../lib/usage'
 import styles from '../styles/Shortlist.module.css'
 
 const USES = [
@@ -39,12 +38,8 @@ export default function Shortlist() {
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
-  const [remaining, setRemaining] = useState({ shortlists: 999, reviews: 999, unlimited: true })
+  const [showSignupNudge, setShowSignupNudge] = useState(false)
   const loadingRef = useRef(null)
-
-  useEffect(() => {
-    if (user) getRemaining(user.id).then(setRemaining)
-  }, [user])
 
   useEffect(() => {
     if (loading) {
@@ -70,8 +65,6 @@ export default function Shortlist() {
   }
 
   const runShortlist = async () => {
-    if (!user) { router.push('/auth?next=/shortlist'); return }
-
     setLoading(true)
     setError('')
     try {
@@ -86,14 +79,27 @@ export default function Shortlist() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      await fetch('/api/save-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, type: 'shortlist', input: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, size }, result: data })
-      })
+      // If signed in, save to dashboard
+      if (user) {
+        await fetch('/api/save-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            type: 'shortlist',
+            input: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, size },
+            result: data
+          })
+        })
+      }
 
       setResults(data)
       setStep('results')
+
+      // Show signup nudge after a delay if not signed in
+      if (!user) {
+        setTimeout(() => setShowSignupNudge(true), 3000)
+      }
     } catch (e) {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -102,10 +108,11 @@ export default function Shortlist() {
   }
 
   const buildAutoTraderUrl = (car) => {
-    const make = encodeURIComponent(car.make.toLowerCase())
-    const model = encodeURIComponent(car.model.toLowerCase().replace(/\s+/g, '-'))
-    const yearFrom = car.years ? car.years.split('–')[0] : ''
-    return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${yearFrom}&price-to=${budget[1]}&postcode=${postcode || ''}&radius=50`
+    const make = encodeURIComponent(car.make)
+    const model = encodeURIComponent(car.model)
+    const pc = postcode || ''
+    // No year filter — just price range so results actually come up
+    return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&price-from=${budget[0]}&price-to=${budget[1]}&postcode=${pc}&radius=50&sort=relevance`
   }
 
   if (loading) return (
@@ -120,7 +127,6 @@ export default function Shortlist() {
             </svg>
           </div>
           <p className={styles.loadingMsg}>{loadingMsg}</p>
-          <p className={styles.loadingHint}>Powered by Claude AI</p>
         </div>
       </div>
     </div>
@@ -133,8 +139,25 @@ export default function Shortlist() {
         <div className={styles.resultsHeader}>
           <p className="label">Your shortlist</p>
           <h2>Top {size} cars for you</h2>
-          <p className={styles.resultsSub}>Budget £{budget[0].toLocaleString()}–£{budget[1].toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}</p>
+          <p className={styles.resultsSub}>
+            Budget £{budget[0].toLocaleString()}–£{budget[1].toLocaleString()} · {postcode ? postcode.toUpperCase() : 'UK wide'}
+          </p>
         </div>
+
+        {/* Signup nudge — shows after a few seconds if not signed in */}
+        {showSignupNudge && !user && (
+          <div className={styles.signupNudge}>
+            <div className={styles.nudgeText}>
+              <strong>Save your shortlist</strong>
+              <span>Create a free account to save these results and access them later.</span>
+            </div>
+            <button className={styles.nudgeBtn} onClick={() => router.push('/auth?next=/shortlist')}>
+              Save results →
+            </button>
+            <button className={styles.nudgeDismiss} onClick={() => setShowSignupNudge(false)}>✕</button>
+          </div>
+        )}
+
         {results.map(car => (
           <div key={car.rank} className={styles.carCard}>
             <div className={styles.carTop}>
@@ -152,7 +175,12 @@ export default function Shortlist() {
             </div>
             <div className={styles.carActions}>
               <button className={styles.reviewBtn} onClick={() => {
-                const params = new URLSearchParams({ make: car.make, model: car.model, year: car.years?.split('–')[0] || '', price: car.price_midpoint || '' })
+                const params = new URLSearchParams({
+                  make: car.make,
+                  model: car.model,
+                  year: car.years?.split('–')[0] || '',
+                  price: car.price_midpoint || ''
+                })
                 router.push(`/review?${params}`)
               }}>Review this car →</button>
               <a href={buildAutoTraderUrl(car)} target="_blank" rel="noreferrer" className={styles.atBtn}>
@@ -161,7 +189,10 @@ export default function Shortlist() {
             </div>
           </div>
         ))}
-        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null) }}>← New search</button>
+
+        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null); setShowSignupNudge(false) }}>
+          ← New search
+        </button>
       </div>
     </div>
   )
@@ -181,15 +212,8 @@ export default function Shortlist() {
             <p className="label">Step 1 of 5</p>
             <h2>What's your budget?</h2>
             <p className={styles.sub}>Drag both handles to set your min and max spend.</p>
-            <RangeSlider
-              min={1000}
-              max={50000}
-              step={500}
-              value={budget}
-              onChange={setBudget}
-            />
-            <div className={styles.sliderBounds}><span>£1,000</span><span>£50,000</span></div>
-            <button className="btn-primary" onClick={() => setStep(2)}>Next →</button>
+            <RangeSlider min={1000} max={50000} step={500} value={budget} onChange={setBudget} />
+            <button className="btn-primary" onClick={() => setStep(2)} style={{marginTop: '0.5rem'}}>Next →</button>
           </div>
         )}
 
