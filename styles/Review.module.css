@@ -14,30 +14,6 @@
 .loadingMsg { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
 .loadingHint { font-size: 12px; color: var(--muted); }
 
-.dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius-sm);
-  z-index: 50;
-  max-height: 220px;
-  overflow-y: auto;
-  margin-top: 2px;
-}
-
-.dropdownItem {
-  padding: 0.6rem 0.85rem;
-  font-size: 14px;
-  cursor: pointer;
-  color: var(--text);
-  transition: background 0.1s;
-}
-
-.dropdownItem:hover { background: var(--surface2); }
-
 .carHeader { margin-bottom: 1.1rem; }
 .carHeader h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 3px; }
 .asking { font-size: 14px; color: var(--muted); }
@@ -78,6 +54,23 @@
 .trackOn { border: 2px solid var(--accent) !important; color: var(--text) !important; }
 
 .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+
+.atLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 0.5px solid rgba(232,255,71,0.3);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 1rem;
+  transition: all 0.15s;
+}
+
+.atLink:hover { background: rgba(232,255,71,0.06); border-color: var(--accent); }
 
 .drop { border: 0.5px solid var(--border2); border-radius: var(--radius); margin-bottom: 0.6rem; overflow: hidden; }
 .dropHeader { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.1rem; cursor: pointer; transition: background 0.15s; user-select: none; }
@@ -144,4 +137,3 @@
 .altPrice { font-size: 13px; font-weight: 500; margin-bottom: 5px; }
 .altBtn { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--muted); font-family: inherit; transition: all 0.15s; }
 .altBtn:hover { border-color: var(--accent); color: var(--text); }
-.searchesLeft { font-size: 12px; color: var(--muted); text-align: center; }
