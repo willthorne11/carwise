@@ -22,8 +22,8 @@ export default function Home() {
             <div className={styles.stat}><div className={styles.statNum}>100%</div><div className={styles.statLabel}>plain English</div></div>
           </div>
           <div className={styles.ctaRow}>
-            <Link href="/shortlist" className={styles.btnPrimary}>Build my shortlist</Link>
-            <Link href="/review" className={styles.btnSecondary}>Review a car</Link>
+            <Link href="/review" className={styles.btnPrimary}>Review a car</Link>
+            <Link href="/shortlist" className={styles.btnSecondary}>Build my shortlist</Link>
           </div>
           <p className={styles.freeTag}>No card required. Free to start.</p>
         </section>
@@ -98,8 +98,8 @@ export default function Home() {
               </div>
             </div>
             <div className={styles.pricingCta}>
-              <Link href="/shortlist" className={styles.btnPrimary} style={{maxWidth: '280px', display: 'block', margin: '0 auto', textAlign: 'center'}}>
-                Start for free
+              <Link href="/review" className={styles.btnPrimary} style={{maxWidth: '280px', display: 'block', margin: '0 auto', textAlign: 'center'}}>
+                Review a car free
               </Link>
               <p className={styles.pricingNudge}>You're about to spend £5,000+ on a car. <strong>This costs less than a coffee.</strong></p>
             </div>
