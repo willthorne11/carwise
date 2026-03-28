@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Nav from '../components/Nav'
+import CarSearch from '../components/CarSearch'
 import { useAuth } from '../lib/auth'
 import { canUseReview, incrementReview, getRemaining } from '../lib/usage'
-import { CAR_MAKES, CAR_MODELS, YEARS } from '../lib/carData'
 import styles from '../styles/Review.module.css'
 
 const LOADING_MSGS = [
@@ -15,39 +15,34 @@ const LOADING_MSGS = [
   'Building your verdict...'
 ]
 
+const YEARS = Array.from({length: 26}, (_, i) => (2025 - i).toString())
+
 export default function Review() {
   const router = useRouter()
   const { user } = useAuth()
-  const [step, setStep] = useState('input')
-  const [make, setMake] = useState('')
-  const [model, setModel] = useState('')
+  const [selectedCar, setSelectedCar] = useState(null)
   const [year, setYear] = useState('')
   const [mileage, setMileage] = useState('')
   const [price, setPrice] = useState('')
   const [fuel, setFuel] = useState('')
   const [concerns, setConcerns] = useState('')
-  const [makeSearch, setMakeSearch] = useState('')
-  const [showMakeDropdown, setShowMakeDropdown] = useState(false)
+  const [step, setStep] = useState('input')
   const [loading, setLoading] = useState(false)
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
-  const [remaining, setRemaining] = useState({ shortlists: 1, reviews: 5, unlimited: false })
   const [saved, setSaved] = useState(false)
   const [tracked, setTracked] = useState(false)
   const [openDrops, setOpenDrops] = useState({})
   const [checked, setChecked] = useState({})
   const loadingRef = useRef(null)
-  const makeRef = useRef(null)
 
   useEffect(() => {
-    if (user) getRemaining(user.id).then(setRemaining)
-    const { make: qm, model: qmod, year: qy, price: qp } = router.query
-    if (qm) { setMake(qm); setMakeSearch(qm) }
-    if (qmod) setModel(qmod)
+    const { make, model, year: qy, price: qp } = router.query
+    if (make && model) setSelectedCar({ make, model, full: `${make} ${model}` })
     if (qy) setYear(qy)
     if (qp) setPrice(qp)
-  }, [user, router.query])
+  }, [router.query])
 
   useEffect(() => {
     if (loading) {
@@ -62,51 +57,37 @@ export default function Review() {
     return () => clearInterval(loadingRef.current)
   }, [loading])
 
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (makeRef.current && !makeRef.current.contains(e.target)) setShowMakeDropdown(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  const filteredMakes = CAR_MAKES.filter(m => m.toLowerCase().includes(makeSearch.toLowerCase()))
-  const availableModels = make && CAR_MODELS[make] ? CAR_MODELS[make] : []
-
-  const selectMake = (m) => {
-    setMake(m)
-    setMakeSearch(m)
-    setModel('')
-    setShowMakeDropdown(false)
-  }
-
   const toggleDrop = (id) => setOpenDrops(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleCheck = (id) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
 
   const runReview = async () => {
     if (!user) { router.push('/auth?next=/review'); return }
-    if (!make || !model) { setError('Please select the make and model.'); return }
-    const can = await canUseReview(user.id)
-    if (!can) { router.push('/unlock'); return }
+    if (!selectedCar) { setError('Please search for and select a car first.'); return }
 
     setLoading(true)
     setError('')
+
     try {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'review', data: { make, model, year, mileage, price, fuel, concerns } })
+        body: JSON.stringify({
+          type: 'review',
+          data: { make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel, concerns }
+        })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      await incrementReview(user.id)
-      const rem = await getRemaining(user.id)
-      setRemaining(rem)
 
       await fetch('/api/save-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, type: 'review', input: { make, model, year, mileage, price, fuel }, result: data })
+        body: JSON.stringify({
+          userId: user.id,
+          type: 'review',
+          input: { make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel },
+          result: data
+        })
       })
 
       setResult(data)
@@ -147,12 +128,18 @@ export default function Review() {
     const totalChecks = (result.checklist_specific?.length || 0) + 9
     const doneCount = Object.values(checked).filter(Boolean).length
 
+    const buildATUrl = () => {
+      const make = encodeURIComponent(selectedCar.make)
+      const model = encodeURIComponent(selectedCar.model)
+      return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${parseInt(year) - 1}&year-to=${parseInt(year) + 1}&price-to=${askNum + 1000}&radius=50`
+    }
+
     return (
       <div>
         <Nav />
         <div className={styles.wrap}>
           <div className={styles.carHeader}>
-            <h2>{year} {make} {model} · {mileage ? parseInt(mileage).toLocaleString() + ' miles' : '—'}</h2>
+            <h2>{year} {selectedCar?.full} · {mileage ? parseInt(mileage).toLocaleString() + ' miles' : '—'}</h2>
             <div className={styles.asking}>Asking: <strong>£{askNum.toLocaleString()}</strong></div>
           </div>
 
@@ -207,9 +194,16 @@ export default function Review() {
             {result.flags?.map((f, i) => <span key={i} className={`chip chip-${f.type}`}>{f.text}</span>)}
           </div>
 
+          {askNum > 0 && (
+            <a href={buildATUrl()} target="_blank" rel="noreferrer" className={styles.atLink}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+              Search for this car on AutoTrader
+            </a>
+          )}
+
           {[
             { id: 'mot', title: 'MOT history', badge: 'Check gov.uk', badgeType: 'good', content: (
-              <p className={styles.dropNote}>Enter the reg on <a href="https://www.check-mot.service.gov.uk" target="_blank" rel="noreferrer" style={{color: 'var(--accent)'}}>gov.uk/check-mot-history</a> for the full official MOT record — free and shows every test, advisory and failure.</p>
+              <p className={styles.dropNote}>Enter the reg on <a href="https://www.check-mot.service.gov.uk" target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>gov.uk/check-mot-history</a> — free and shows every test, advisory and failure.</p>
             )},
             { id: 'ins', title: 'Insurance estimate', badge: `Group ${result.insurance_group_number}`, badgeType: 'good', content: (
               <div>
@@ -218,7 +212,7 @@ export default function Review() {
                     <div key={label} className={styles.insCard}><div className={styles.insLabel}>{label}</div><div className={styles.insVal}>{val}</div></div>
                   ))}
                 </div>
-                <p className={styles.dropNote}>Always get actual quotes from Compare the Market or Go Compare before committing.</p>
+                <p className={styles.dropNote}>Always get actual quotes from Compare the Market or Go Compare.</p>
               </div>
             )},
             { id: 'tax', title: 'Road tax', badge: `£${result.road_tax_annual}/yr`, badgeType: 'good', content: (
@@ -284,7 +278,7 @@ export default function Review() {
                 ))}
                 {result.checklist_specific?.length > 0 && (
                   <>
-                    <div className={styles.checkSectionTitle} style={{marginTop:'0.75rem'}}>{make} {model} specific</div>
+                    <div className={styles.checkSectionTitle} style={{marginTop:'0.75rem'}}>{selectedCar?.full} specific</div>
                     {result.checklist_specific.map((item, i) => {
                       const id = `s${i}`
                       return (
@@ -305,7 +299,7 @@ export default function Review() {
               <div className={styles.dropHeader} onClick={() => toggleDrop(drop.id)}>
                 <div className={styles.dropLeft}>
                   <span className={styles.dropTitle}>{drop.title}</span>
-                  <span className={`${styles.badge} ${styles['badge-'+drop.badgeType]}`}>{drop.badge}</span>
+                  <span className={`${styles.badge} ${styles['badge-' + drop.badgeType]}`}>{drop.badge}</span>
                 </div>
                 <svg className={`${styles.arrow} ${openDrops[drop.id] ? styles.arrowOpen : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </div>
@@ -323,16 +317,13 @@ export default function Review() {
                 <div className={styles.altPrice}>{alt.price}</div>
                 <button className={styles.altBtn} onClick={() => {
                   const parts = alt.name.split(' ')
-                  router.push(`/review?make=${parts[0]}&model=${parts[1] || ''}&price=${alt.price.replace(/[^0-9]/g,'')}`)
+                  router.push(`/review?make=${parts[0]}&model=${parts.slice(1).join(' ')}&price=${alt.price.replace(/[^0-9]/g,'')}`)
                 }}>Review →</button>
               </div>
             </div>
           ))}
 
-          <p className={styles.searchesLeft}>
-            {remaining.unlimited ? 'Unlimited reviews' : `${remaining.reviews} free reviews remaining`}
-          </p>
-          <button className="btn-ghost" style={{marginTop:'1rem'}} onClick={() => { setStep('input'); setResult(null); setSaved(false); setTracked(false); setChecked({}) }}>
+          <button className="btn-ghost" style={{marginTop:'1.5rem'}} onClick={() => { setStep('input'); setResult(null); setSaved(false); setTracked(false); setChecked({}) }}>
             ← Review another car
           </button>
         </div>
@@ -345,37 +336,14 @@ export default function Review() {
       <Nav />
       <div className={styles.wrap}>
         <h2>Review a car</h2>
-        <p className={styles.sub}>Enter what you know — we'll tell you if it's worth it.</p>
-
-        <div className="field" ref={makeRef} style={{position:'relative'}}>
-          <label>Make</label>
-          <input
-            type="text"
-            value={makeSearch}
-            onChange={e => { setMakeSearch(e.target.value); setMake(''); setShowMakeDropdown(true) }}
-            onFocus={() => setShowMakeDropdown(true)}
-            placeholder="Search make e.g. Ford"
-            autoComplete="off"
-          />
-          {showMakeDropdown && filteredMakes.length > 0 && (
-            <div className={styles.dropdown}>
-              {filteredMakes.slice(0,8).map(m => (
-                <div key={m} className={styles.dropdownItem} onClick={() => selectMake(m)}>{m}</div>
-              ))}
-            </div>
-          )}
-        </div>
+        <p className={styles.sub}>Search for the car you're considering — we'll tell you if it's worth it.</p>
 
         <div className="field">
-          <label>Model</label>
-          {availableModels.length > 0 ? (
-            <select value={model} onChange={e => setModel(e.target.value)}>
-              <option value="">Select model</option>
-              {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          ) : (
-            <input type="text" value={model} onChange={e => setModel(e.target.value)} placeholder="e.g. Fiesta" />
-          )}
+          <label>Search for a car</label>
+          <CarSearch
+            onSelect={setSelectedCar}
+            selected={selectedCar?.full}
+          />
         </div>
 
         <div className="row2">
@@ -415,14 +383,10 @@ export default function Review() {
         </div>
 
         {error && <p className={styles.error}>{error}</p>}
-        <button className="btn-primary" onClick={runReview}>Get my verdict →</button>
-        <p className={styles.searchesLeft} style={{marginTop:'0.75rem'}}>
-          {!user ? <span>Sign in to save your reviews — <a href="/auth" style={{color:'var(--accent)'}}>create free account</a></span>
-            : remaining.unlimited ? 'Unlimited reviews'
-            : remaining.reviews > 0 ? `${remaining.reviews} free reviews remaining`
-            : <span>No free reviews left — <a href="/unlock" style={{color:'var(--accent)'}}>unlock for £7.99</a></span>
-          }
-        </p>
+        <button className="btn-primary" onClick={runReview} disabled={!selectedCar}>
+          Get my verdict →
+        </button>
+        {!selectedCar && <p style={{fontSize:'12px',color:'var(--muted)',textAlign:'center',marginTop:'0.5rem'}}>Select a car above to continue</p>}
       </div>
     </div>
   )
