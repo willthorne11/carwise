@@ -23,6 +23,9 @@ const LOADING_MSGS = [
   'Almost there...'
 ]
 
+const SESSION_KEY = 'cw_shortlist_results'
+const SESSION_INPUT_KEY = 'cw_shortlist_input'
+
 export default function Shortlist() {
   const router = useRouter()
   const { user } = useAuth()
@@ -39,7 +42,35 @@ export default function Shortlist() {
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
   const [showSignupNudge, setShowSignupNudge] = useState(false)
+  const [savedToAccount, setSavedToAccount] = useState(false)
   const loadingRef = useRef(null)
+
+  // On load — check if we're returning from sign in with saved results
+  useEffect(() => {
+    const savedResults = sessionStorage.getItem(SESSION_KEY)
+    const savedInput = sessionStorage.getItem(SESSION_INPUT_KEY)
+
+    if (savedResults && savedInput) {
+      const parsedResults = JSON.parse(savedResults)
+      const parsedInput = JSON.parse(savedInput)
+
+      setResults(parsedResults)
+      setBudget([parsedInput.minBudget, parsedInput.maxBudget])
+      setPostcode(parsedInput.postcode || '')
+      setSize(parsedInput.size || 5)
+      setStep('results')
+
+      // If user just signed in, save to their account automatically
+      if (user) {
+        saveToAccount(user.id, parsedInput, parsedResults)
+        sessionStorage.removeItem(SESSION_KEY)
+        sessionStorage.removeItem(SESSION_INPUT_KEY)
+        setSavedToAccount(true)
+      } else {
+        setTimeout(() => setShowSignupNudge(true), 2000)
+      }
+    }
+  }, [user])
 
   useEffect(() => {
     if (loading) {
@@ -54,6 +85,23 @@ export default function Shortlist() {
     return () => clearInterval(loadingRef.current)
   }, [loading])
 
+  const saveToAccount = async (userId, input, data) => {
+    try {
+      await fetch('/api/save-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          type: 'shortlist',
+          input,
+          result: data
+        })
+      })
+    } catch (e) {
+      console.error('Failed to save to account', e)
+    }
+  }
+
   const toggleUse = (val) => setUses(prev => prev.includes(val) ? prev.filter(u => u !== val) : [...prev, val])
 
   const togglePriority = (val) => {
@@ -67,36 +115,33 @@ export default function Shortlist() {
   const runShortlist = async () => {
     setLoading(true)
     setError('')
+
+    const input = { minBudget: budget[0], maxBudget: budget[1], uses, priorities, postcode, fuel, transmission, size }
+
     try {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'shortlist',
-          data: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, postcode, fuel, transmission, size }
-        })
+        body: JSON.stringify({ type: 'shortlist', data: input })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      // If signed in, save to dashboard
+      // Always save to sessionStorage first so results survive a sign in redirect
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
+      sessionStorage.setItem(SESSION_INPUT_KEY, JSON.stringify(input))
+
+      // If already signed in, save to account immediately
       if (user) {
-        await fetch('/api/save-search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            type: 'shortlist',
-            input: { minBudget: budget[0], maxBudget: budget[1], uses, priorities, size },
-            result: data
-          })
-        })
+        await saveToAccount(user.id, input, data)
+        setSavedToAccount(true)
+        sessionStorage.removeItem(SESSION_KEY)
+        sessionStorage.removeItem(SESSION_INPUT_KEY)
       }
 
       setResults(data)
       setStep('results')
 
-      // Show signup nudge after a delay if not signed in
       if (!user) {
         setTimeout(() => setShowSignupNudge(true), 3000)
       }
@@ -107,11 +152,15 @@ export default function Shortlist() {
     }
   }
 
+  const handleSaveResults = () => {
+    // Send them to sign in — results are in sessionStorage, will be picked up on return
+    router.push('/auth?next=/shortlist')
+  }
+
   const buildAutoTraderUrl = (car) => {
     const make = encodeURIComponent(car.make)
     const model = encodeURIComponent(car.model)
     const pc = postcode || ''
-    // No year filter — just price range so results actually come up
     return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&price-from=${budget[0]}&price-to=${budget[1]}&postcode=${pc}&radius=50&sort=relevance`
   }
 
@@ -144,14 +193,22 @@ export default function Shortlist() {
           </p>
         </div>
 
-        {/* Signup nudge — shows after a few seconds if not signed in */}
+        {/* Saved confirmation */}
+        {savedToAccount && (
+          <div className={styles.savedBanner}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            Shortlist saved to your account
+          </div>
+        )}
+
+        {/* Signup nudge — shows after delay if not signed in */}
         {showSignupNudge && !user && (
           <div className={styles.signupNudge}>
             <div className={styles.nudgeText}>
               <strong>Save your shortlist</strong>
-              <span>Create a free account to save these results and access them later.</span>
+              <span>Sign in to save these results — they'll still be here when you get back.</span>
             </div>
-            <button className={styles.nudgeBtn} onClick={() => router.push('/auth?next=/shortlist')}>
+            <button className={styles.nudgeBtn} onClick={handleSaveResults}>
               Save results →
             </button>
             <button className={styles.nudgeDismiss} onClick={() => setShowSignupNudge(false)}>✕</button>
@@ -190,7 +247,14 @@ export default function Shortlist() {
           </div>
         ))}
 
-        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => { setStep(1); setResults(null); setShowSignupNudge(false) }}>
+        <button className="btn-ghost" style={{marginTop: '1rem'}} onClick={() => {
+          setStep(1)
+          setResults(null)
+          setShowSignupNudge(false)
+          setSavedToAccount(false)
+          sessionStorage.removeItem(SESSION_KEY)
+          sessionStorage.removeItem(SESSION_INPUT_KEY)
+        }}>
           ← New search
         </button>
       </div>
