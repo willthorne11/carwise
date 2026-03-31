@@ -137,3 +137,65 @@
 }
 
 .atBtn:hover { border-color: var(--text); color: var(--text); }
+/* Add these two blocks to the bottom of your existing Shortlist.module.css */
+
+.savedBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(74,222,128,0.1);
+  border: 0.5px solid rgba(74,222,128,0.3);
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+.signupNudge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.nudgeText { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nudgeText strong { font-size: 13px; font-weight: 500; color: var(--text); }
+.nudgeText span { font-size: 12px; color: var(--muted); }
+
+.nudgeBtn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 0.5rem 1rem;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.nudgeBtn:hover { opacity: 0.85; }
+
+.nudgeDismiss {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.nudgeDismiss:hover { color: var(--text); }
