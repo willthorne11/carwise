@@ -1,124 +1,95 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import styles from './RangeSlider.module.css'
-
-const MIN = 1000
-const MAX = 50000
-
-function snap(val) {
-  return Math.round(val / 500) * 500
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2.5rem;
+  border-bottom: 0.5px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
 }
 
-function clamp(val, lo, hi) {
-  return Math.max(lo, Math.min(hi, val))
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  text-decoration: none;
+  color: var(--text);
 }
 
-function toPercent(val) {
-  return ((val - MIN) / (MAX - MIN)) * 100
+.logo span { color: var(--accent); }
+
+.links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
 }
 
-function fromPercent(pct) {
-  return MIN + (pct / 100) * (MAX - MIN)
+.links a {
+  color: var(--muted);
+  font-size: 14px;
+  transition: color 0.2s;
+  text-decoration: none;
 }
 
-export default function RangeSlider({ value = [3000, 10000], onChange }) {
-  const [minVal, setMinVal] = useState(value[0])
-  const [maxVal, setMaxVal] = useState(value[1])
-  const [dragging, setDragging] = useState(null)
-  const trackRef = useRef(null)
+.links a:hover { color: var(--text); }
 
-  useEffect(() => {
-    setMinVal(value[0])
-    setMaxVal(value[1])
-  }, [])
+.ctaSecondary {
+  color: var(--muted) !important;
+}
 
-  const getValFromEvent = useCallback((e) => {
-    const track = trackRef.current
-    if (!track) return null
-    const rect = track.getBoundingClientRect()
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX
-    const pct = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100)
-    return snap(fromPercent(pct))
-  }, [])
+.cta {
+  background: var(--accent) !important;
+  color: #000 !important;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  font-size: 14px;
+  transition: opacity 0.2s !important;
+  text-decoration: none !important;
+}
 
-  const handleMouseDown = useCallback((handle) => (e) => {
-    e.preventDefault()
-    setDragging(handle)
-  }, [])
+.cta:hover { opacity: 0.85; }
 
-  const handleMove = useCallback((e) => {
-    if (!dragging) return
-    const val = getValFromEvent(e)
-    if (val === null) return
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  padding: 4px;
+}
 
-    if (dragging === 'min') {
-      const newMin = clamp(val, MIN, maxVal - 500)
-      setMinVal(newMin)
-      onChange?.([newMin, maxVal])
-    } else {
-      const newMax = clamp(val, minVal + 500, MAX)
-      setMaxVal(newMax)
-      onChange?.([minVal, newMax])
-    }
-  }, [dragging, minVal, maxVal, getValFromEvent, onChange])
+.mobileMenu {
+  display: none;
+  flex-direction: column;
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+  position: sticky;
+  top: 65px;
+  z-index: 99;
+}
 
-  const handleUp = useCallback(() => setDragging(null), [])
+.mobileLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.5rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 0.5px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+}
 
-  useEffect(() => {
-    if (dragging) {
-      window.addEventListener('mousemove', handleMove)
-      window.addEventListener('mouseup', handleUp)
-      window.addEventListener('touchmove', handleMove)
-      window.addEventListener('touchend', handleUp)
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('mouseup', handleUp)
-      window.removeEventListener('touchmove', handleMove)
-      window.removeEventListener('touchend', handleUp)
-    }
-  }, [dragging, handleMove, handleUp])
+.mobileLink:last-child { border-bottom: none; }
+.mobileLink:hover { background: var(--surface2); color: var(--text); }
 
-  const minPct = toPercent(minVal)
-  const maxPct = toPercent(maxVal)
-
-  return (
-    <div className={styles.wrap}>
-      <div className={styles.display}>
-        <div className={styles.displayVal}>
-          <div className={styles.displayLabel}>Min</div>
-          <div className={styles.displayNum}>£{minVal.toLocaleString()}</div>
-        </div>
-        <div className={styles.displayDash}>—</div>
-        <div className={styles.displayVal}>
-          <div className={styles.displayLabel}>Max</div>
-          <div className={styles.displayNum}>£{maxVal.toLocaleString()}</div>
-        </div>
-      </div>
-
-      <div className={styles.trackWrap} ref={trackRef}>
-        <div className={styles.track} />
-        <div
-          className={styles.range}
-          style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }}
-        />
-        <div
-          className={`${styles.thumb} ${dragging === 'min' ? styles.active : ''}`}
-          style={{ left: `${minPct}%` }}
-          onMouseDown={handleMouseDown('min')}
-          onTouchStart={handleMouseDown('min')}
-        />
-        <div
-          className={`${styles.thumb} ${dragging === 'max' ? styles.active : ''}`}
-          style={{ left: `${maxPct}%` }}
-          onMouseDown={handleMouseDown('max')}
-          onTouchStart={handleMouseDown('max')}
-        />
-      </div>
-
-      <div className={styles.bounds}>
-        <span>£1,000</span>
-        <span>£50,000</span>
-      </div>
-    </div>
-  )
+@media (max-width: 680px) {
+  .nav { padding: 1rem 1.5rem; }
+  .links { display: none; }
+  .hamburger { display: flex; }
+  .mobileMenu { display: flex; }
 }
