@@ -26,15 +26,9 @@ export default function Dashboard() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Fetch error:', error)
-        setFetchError(error.message)
-        setSearches([])
-      } else {
-        setSearches(data || [])
-      }
+      if (error) { setFetchError(error.message); setSearches([]) }
+      else setSearches(data || [])
     } catch (e) {
-      console.error('Unexpected error:', e)
       setFetchError(e.message)
       setSearches([])
     } finally {
@@ -42,36 +36,25 @@ export default function Dashboard() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
+  const handleSignOut = async () => { await signOut(); router.push('/') }
 
   const deleteSearch = async (id) => {
     try {
       await supabase.from('searches').delete().eq('id', id)
       setSearches(prev => prev.filter(s => s.id !== id))
-    } catch (e) {
-      console.error('Delete error:', e)
-    }
+    } catch (e) { console.error('Delete error:', e) }
   }
 
   const filtered = tab === 'all' ? searches : searches.filter(s => s.type === tab)
 
   if (loading || fetching) return (
-    <div>
-      <Nav />
-      <div className={styles.loadingWrap}>
-        <div className="spinner"></div>
-      </div>
-    </div>
+    <div><Nav /><div className={styles.loadingWrap}><p style={{color:'var(--muted)',fontSize:'14px'}}>Loading...</p></div></div>
   )
 
   return (
     <div>
       <Nav />
       <div className={styles.wrap}>
-
         <div className={styles.header}>
           <div>
             <p className="label">Your account</p>
@@ -102,12 +85,8 @@ export default function Dashboard() {
         </div>
 
         <div className={styles.actions}>
-          <button className="btn-primary" style={{flex: 1}} onClick={() => router.push('/review')}>
-            Review a car →
-          </button>
-          <button className="btn-ghost" style={{flex: 1}} onClick={() => router.push('/shortlist')}>
-            Build a shortlist
-          </button>
+          <button className="btn-primary" style={{flex:1}} onClick={() => router.push('/review')}>Review a car →</button>
+          <button className="btn-ghost" style={{flex:1}} onClick={() => router.push('/shortlist')}>Build a shortlist</button>
         </div>
 
         {fetchError && (
@@ -117,7 +96,7 @@ export default function Dashboard() {
         )}
 
         <div className={styles.tabs}>
-          {['all', 'shortlist', 'review'].map(t => (
+          {['all','shortlist','review'].map(t => (
             <button key={t} className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`} onClick={() => setTab(t)}>
               {t === 'all' ? 'All' : t === 'shortlist' ? 'Shortlists' : 'Reviews'}
             </button>
@@ -127,7 +106,7 @@ export default function Dashboard() {
         {filtered.length === 0 ? (
           <div className={styles.empty}>
             <p>{fetchError ? 'Could not load your searches.' : `No ${tab === 'all' ? 'searches' : tab + 's'} yet.`}</p>
-            <button className="btn-primary" style={{marginTop: '1rem', maxWidth: '200px', margin: '1rem auto 0'}}
+            <button className="btn-primary" style={{marginTop:'1rem',maxWidth:'200px',margin:'1rem auto 0'}}
               onClick={() => router.push(tab === 'review' ? '/review' : '/shortlist')}>
               {tab === 'review' ? 'Review a car →' : 'Build a shortlist →'}
             </button>
@@ -135,16 +114,11 @@ export default function Dashboard() {
         ) : (
           <div className={styles.searchList}>
             {filtered.map(s => {
-              let input = {}
-              let result = {}
-
+              let input = {}, result = {}
               try { input = typeof s.input === 'string' ? JSON.parse(s.input) : (s.input || {}) } catch (e) {}
               try { result = typeof s.result === 'string' ? JSON.parse(s.result) : (s.result || {}) } catch (e) {}
 
-              const date = new Date(s.created_at).toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'short', year: 'numeric'
-              })
-
+              const date = new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
               const resultArr = Array.isArray(result) ? result : []
 
               return (
@@ -185,21 +159,14 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  <button className={styles.viewBtn} onClick={() => {
-                    if (s.type === 'review') {
-                      const params = new URLSearchParams({
-                        make: input.make || '',
-                        model: input.model || '',
-                        year: input.year || '',
-                        price: input.price || ''
-                      })
-                      router.push(`/review?${params}`)
-                    } else {
-                      router.push('/shortlist')
-                    }
-                  }}>
-                    Run again →
-                  </button>
+                  <div className={styles.cardActions}>
+                    <button className={styles.viewBtn} onClick={() => router.push(`/results?id=${s.id}`)}>
+                      View results →
+                    </button>
+                    <button className={styles.rerunBtn} onClick={() => router.push(s.type === 'review' ? `/review?make=${input.make || ''}&model=${input.model || ''}&year=${input.year || ''}` : '/shortlist')}>
+                      Run again
+                    </button>
+                  </div>
                 </div>
               )
             })}
