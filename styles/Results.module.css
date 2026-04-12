@@ -1,0 +1,121 @@
+.wrap { max-width: 580px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.back {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s;
+}
+.back:hover { color: var(--text); }
+
+.loadingWrap { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+
+.header { margin-bottom: 1.5rem; }
+.header h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin: 0.25rem 0; }
+.sub { font-size: 14px; color: var(--muted); }
+
+.carCard { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 0.75rem; }
+.carTop { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.carRank { width: 26px; height: 26px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); color: var(--muted); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.carInfo { flex: 1; }
+.carName { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+.carMeta { font-size: 12px; color: var(--muted); }
+.carScore { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--muted); }
+.carReason { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; padding: 8px 10px; background: var(--surface2); border-radius: var(--radius-sm); }
+.carTags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.carActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.reviewBtn { background: var(--accent); border: none; border-radius: var(--radius-full); padding: 0.55rem; font-size: 13px; cursor: pointer; color: #000; font-weight: 500; font-family: inherit; }
+.atBtn { display: block; text-align: center; border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 0.55rem; font-size: 13px; color: var(--muted); text-decoration: none; }
+
+.carHeader { margin-bottom: 1.1rem; }
+.carHeader h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+.asking { font-size: 14px; color: var(--muted); }
+
+.verdict { border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+.fair { background: rgba(74,222,128,0.1); border: 0.5px solid rgba(74,222,128,0.3); }
+.overpriced { background: rgba(251,191,36,0.1); border: 0.5px solid rgba(251,191,36,0.3); }
+.great_deal { background: rgba(96,165,250,0.1); border: 0.5px solid rgba(96,165,250,0.3); }
+.verdictLabel { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; margin-bottom: 4px; }
+.fair .verdictLabel { color: var(--success); }
+.overpriced .verdictLabel { color: var(--warning); }
+.great_deal .verdictLabel { color: #60a5fa; }
+.verdictText { font-size: 13px; color: var(--muted); max-width: 320px; line-height: 1.5; }
+.verdictScore { text-align: right; flex-shrink: 0; margin-left: 1rem; }
+.bigScore { font-size: 32px; font-weight: 500; line-height: 1; }
+.fair .bigScore { color: var(--success); }
+.overpriced .bigScore { color: var(--warning); }
+.great_deal .bigScore { color: #60a5fa; }
+.outOf { font-size: 12px; color: var(--muted); }
+
+.scoresGrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 1rem; }
+.sc { background: var(--surface2); border-radius: var(--radius-sm); padding: 0.7rem 0.5rem; text-align: center; }
+.scNum { font-size: 20px; font-weight: 500; line-height: 1; margin-bottom: 3px; }
+.good { color: var(--success); }
+.mid { color: var(--warning); }
+.bad { color: var(--danger); }
+.scLabel { font-size: 11px; color: var(--muted); line-height: 1.3; }
+
+.offerBox { background: var(--surface2); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.offerLabel { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.offerPrice { font-size: 26px; font-weight: 500; }
+.offerSaving { font-size: 12px; color: var(--success); margin-top: 2px; }
+.offerTip { font-size: 12px; color: var(--muted); max-width: 180px; text-align: right; line-height: 1.5; }
+
+.flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+
+.atLink { display: flex; align-items: center; gap: 8px; border: 0.5px solid rgba(232,255,71,0.3); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 14px; color: var(--accent); text-decoration: none; margin-bottom: 1rem; transition: all 0.15s; }
+.atLink:hover { background: rgba(232,255,71,0.06); }
+
+.drop { border: 0.5px solid var(--border2); border-radius: var(--radius); margin-bottom: 0.6rem; overflow: hidden; }
+.dropHeader { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.1rem; cursor: pointer; transition: background 0.15s; user-select: none; }
+.dropHeader:hover { background: var(--surface2); }
+.dropLeft { display: flex; align-items: center; gap: 10px; }
+.dropTitle { font-size: 14px; font-weight: 500; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 500; }
+.badge-good { background: rgba(74,222,128,0.1); color: var(--success); border: 0.5px solid rgba(74,222,128,0.3); }
+.badge-warn { background: rgba(251,191,36,0.1); color: var(--warning); border: 0.5px solid rgba(251,191,36,0.3); }
+.badge-neutral { background: var(--surface2); color: var(--muted); }
+.arrow { transition: transform 0.2s; flex-shrink: 0; }
+.arrowOpen { transform: rotate(180deg); }
+.dropBody { padding: 0 1.1rem 1.1rem; border-top: 0.5px solid var(--border); }
+.dropNote { font-size: 12px; color: var(--muted); line-height: 1.5; padding-top: 0.9rem; }
+
+.insGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 0.9rem; }
+.insCard { background: var(--surface2); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center; }
+.insLabel { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.insVal { font-size: 15px; font-weight: 500; }
+
+.taxRow { padding: 0.9rem 0 0; }
+.taxAmount { font-size: 28px; font-weight: 500; color: var(--success); }
+.taxPer { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.depGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding-top: 0.9rem; margin-bottom: 0.75rem; }
+.depCard { background: var(--surface2); border-radius: var(--radius-sm); padding: 0.7rem; text-align: center; }
+.depYear { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.depVal { font-size: 16px; font-weight: 500; }
+.depDrop { font-size: 11px; color: var(--warning); margin-top: 2px; }
+
+.checkItem { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+.checkItem:last-child { border-bottom: none; }
+.checkBox { width: 16px; height: 16px; border: 0.5px solid var(--border2); border-radius: 3px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.checkBoxOn { background: var(--accent); border-color: var(--accent); }
+.checkText { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.checkDone .checkText { color: var(--border2); text-decoration: line-through; }
+.checkWarn { font-size: 11px; color: var(--warning); margin-top: 1px; }
+
+.divider { height: 0.5px; background: var(--border); margin: 1rem 0; }
+.altLabel { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+.altCard { border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.altName { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.altWhy { font-size: 12px; color: var(--muted); }
+.altRight { text-align: right; flex-shrink: 0; }
+.altPrice { font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.altBtn { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--muted); font-family: inherit; }
