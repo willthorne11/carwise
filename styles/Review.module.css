@@ -9,10 +9,19 @@
 .spinner { width: 56px; height: 56px; animation: rotate 2s linear infinite; }
 @keyframes rotate { 100% { transform: rotate(360deg); } }
 .spinnerTrack { stroke: var(--border2); }
-.spinnerArc { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 80, 200; stroke-dashoffset: 0; animation: dash 1.5s ease-in-out infinite; }
+.spinnerArc { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 80, 200; animation: dash 1.5s ease-in-out infinite; }
 @keyframes dash { 0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; } 50% { stroke-dasharray: 89, 200; stroke-dashoffset: -35px; } 100% { stroke-dasharray: 89, 200; stroke-dashoffset: -124px; } }
 .loadingMsg { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-.loadingHint { font-size: 12px; color: var(--muted); }
+
+.savedBanner { display: flex; align-items: center; gap: 8px; background: rgba(74,222,128,0.1); border: 0.5px solid rgba(74,222,128,0.3); color: var(--success); font-size: 13px; font-weight: 500; padding: 0.7rem 1rem; border-radius: var(--radius); margin-bottom: 1rem; }
+
+.signupNudge { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1rem; margin-bottom: 1rem; animation: slideIn 0.3s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.nudgeText { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nudgeText strong { font-size: 13px; font-weight: 500; color: var(--text); }
+.nudgeText span { font-size: 12px; color: var(--muted); }
+.nudgeBtn { background: var(--accent); color: #000; border: none; border-radius: var(--radius-full); padding: 0.5rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.nudgeDismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px; flex-shrink: 0; }
 
 .carHeader { margin-bottom: 1.1rem; }
 .carHeader h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 3px; }
@@ -55,22 +64,8 @@
 
 .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
 
-.atLink {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 0.5px solid rgba(232,255,71,0.3);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  font-size: 14px;
-  color: var(--accent);
-  text-decoration: none;
-  margin-bottom: 1rem;
-  transition: all 0.15s;
-}
-
-.atLink:hover { background: rgba(232,255,71,0.06); border-color: var(--accent); }
+.atLink { display: flex; align-items: center; gap: 8px; border: 0.5px solid rgba(232,255,71,0.3); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 14px; color: var(--accent); text-decoration: none; margin-bottom: 1rem; transition: all 0.15s; }
+.atLink:hover { background: rgba(232,255,71,0.06); }
 
 .drop { border: 0.5px solid var(--border2); border-radius: var(--radius); margin-bottom: 0.6rem; overflow: hidden; }
 .dropHeader { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.1rem; cursor: pointer; transition: background 0.15s; user-select: none; }
@@ -129,8 +124,7 @@
 
 .divider { height: 0.5px; background: var(--border); margin: 1rem 0; }
 .altLabel { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
-.altCard { border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: border-color 0.15s; }
-.altCard:hover { border-color: var(--text); }
+.altCard { border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .altName { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
 .altWhy { font-size: 12px; color: var(--muted); }
 .altRight { text-align: right; flex-shrink: 0; }
