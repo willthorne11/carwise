@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import Nav from '../components/Nav'
 import CarSearch from '../components/CarSearch'
 import { useAuth } from '../lib/auth'
-import { canUseReview, incrementReview, getRemaining } from '../lib/usage'
 import styles from '../styles/Review.module.css'
 
 const LOADING_MSGS = [
@@ -16,11 +15,14 @@ const LOADING_MSGS = [
 ]
 
 const YEARS = Array.from({length: 26}, (_, i) => (2025 - i).toString())
+const SESSION_KEY = 'cw_review_result'
+const SESSION_INPUT_KEY = 'cw_review_input'
 
 export default function Review() {
   const router = useRouter()
   const { user } = useAuth()
   const [selectedCar, setSelectedCar] = useState(null)
+  const [reg, setReg] = useState('')
   const [year, setYear] = useState('')
   const [mileage, setMileage] = useState('')
   const [price, setPrice] = useState('')
@@ -35,7 +37,38 @@ export default function Review() {
   const [tracked, setTracked] = useState(false)
   const [openDrops, setOpenDrops] = useState({})
   const [checked, setChecked] = useState({})
+  const [savedToAccount, setSavedToAccount] = useState(false)
+  const [showSignupNudge, setShowSignupNudge] = useState(false)
   const loadingRef = useRef(null)
+
+  // Restore results if returning from sign in
+  useEffect(() => {
+    const savedResult = sessionStorage.getItem(SESSION_KEY)
+    const savedInput = sessionStorage.getItem(SESSION_INPUT_KEY)
+    if (savedResult && savedInput) {
+      try {
+        const parsedResult = JSON.parse(savedResult)
+        const parsedInput = JSON.parse(savedInput)
+        setResult(parsedResult)
+        setSelectedCar(parsedInput.selectedCar)
+        setYear(parsedInput.year || '')
+        setMileage(parsedInput.mileage || '')
+        setPrice(parsedInput.price || '')
+        setStep('results')
+        if (user) {
+          saveToAccount(user.id, parsedInput, parsedResult)
+          sessionStorage.removeItem(SESSION_KEY)
+          sessionStorage.removeItem(SESSION_INPUT_KEY)
+          setSavedToAccount(true)
+        } else {
+          setTimeout(() => setShowSignupNudge(true), 2000)
+        }
+      } catch (e) {
+        sessionStorage.removeItem(SESSION_KEY)
+        sessionStorage.removeItem(SESSION_INPUT_KEY)
+      }
+    }
+  }, [user])
 
   useEffect(() => {
     const { make, model, year: qy, price: qp } = router.query
@@ -60,38 +93,46 @@ export default function Review() {
   const toggleDrop = (id) => setOpenDrops(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleCheck = (id) => setChecked(prev => ({ ...prev, [id]: !prev[id] }))
 
-  const runReview = async () => {
-    if (!user) { router.push('/auth?next=/review'); return }
-    if (!selectedCar) { setError('Please search for and select a car first.'); return }
+  const saveToAccount = async (userId, input, data) => {
+    try {
+      await fetch('/api/save-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, type: 'review', input, result: data })
+      })
+    } catch (e) { console.error('Save failed', e) }
+  }
 
+  const runReview = async () => {
+    if (!selectedCar) { setError('Please search for and select a car first.'); return }
     setLoading(true)
     setError('')
+
+    const input = { selectedCar, make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel, concerns }
 
     try {
       const res = await fetch('/api/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'review',
-          data: { make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel, concerns }
-        })
+        body: JSON.stringify({ type: 'review', data: { make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel, concerns } })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      await fetch('/api/save-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          type: 'review',
-          input: { make: selectedCar.make, model: selectedCar.model, year, mileage, price, fuel },
-          result: data
-        })
-      })
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
+      sessionStorage.setItem(SESSION_INPUT_KEY, JSON.stringify(input))
+
+      if (user) {
+        await saveToAccount(user.id, input, data)
+        setSavedToAccount(true)
+        sessionStorage.removeItem(SESSION_KEY)
+        sessionStorage.removeItem(SESSION_INPUT_KEY)
+      }
 
       setResult(data)
       setStep('results')
+
+      if (!user) setTimeout(() => setShowSignupNudge(true), 3000)
     } catch (e) {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -113,7 +154,6 @@ export default function Review() {
             </svg>
           </div>
           <p className={styles.loadingMsg}>{loadingMsg}</p>
-          <p className={styles.loadingHint}>Powered by Claude AI</p>
         </div>
       </div>
     </div>
@@ -129,9 +169,9 @@ export default function Review() {
     const doneCount = Object.values(checked).filter(Boolean).length
 
     const buildATUrl = () => {
-      const make = encodeURIComponent(selectedCar.make)
-      const model = encodeURIComponent(selectedCar.model)
-      return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${parseInt(year) - 1}&year-to=${parseInt(year) + 1}&price-to=${askNum + 1000}&radius=50`
+      const make = encodeURIComponent(selectedCar?.make || '')
+      const model = encodeURIComponent(selectedCar?.model || '')
+      return `https://www.autotrader.co.uk/car-search?make=${make}&model=${model}&year-from=${parseInt(year)-1}&year-to=${parseInt(year)+1}&price-to=${askNum+1000}&radius=50`
     }
 
     return (
@@ -142,6 +182,24 @@ export default function Review() {
             <h2>{year} {selectedCar?.full} · {mileage ? parseInt(mileage).toLocaleString() + ' miles' : '—'}</h2>
             <div className={styles.asking}>Asking: <strong>£{askNum.toLocaleString()}</strong></div>
           </div>
+
+          {savedToAccount && (
+            <div className={styles.savedBanner}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              Review saved to your account
+            </div>
+          )}
+
+          {showSignupNudge && !user && (
+            <div className={styles.signupNudge}>
+              <div className={styles.nudgeText}>
+                <strong>Save this review</strong>
+                <span>Sign in to save this to your account.</span>
+              </div>
+              <button className={styles.nudgeBtn} onClick={() => router.push('/auth?next=/review')}>Save →</button>
+              <button className={styles.nudgeDismiss} onClick={() => setShowSignupNudge(false)}>✕</button>
+            </div>
+          )}
 
           <div className={`${styles.verdict} ${styles[result.verdict]}`}>
             <div>
@@ -202,7 +260,7 @@ export default function Review() {
           )}
 
           {[
-            { id: 'mot', title: 'MOT history', badge: 'Check gov.uk', badgeType: 'good', content: (
+            { id: 'mot', title: 'MOT history', badge: 'Check gov.uk', badgeType: 'neutral', content: (
               <p className={styles.dropNote}>Enter the reg on <a href="https://www.check-mot.service.gov.uk" target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>gov.uk/check-mot-history</a> — free and shows every test, advisory and failure.</p>
             )},
             { id: 'ins', title: 'Insurance estimate', badge: `Group ${result.insurance_group_number}`, badgeType: 'good', content: (
@@ -265,7 +323,7 @@ export default function Review() {
                   {id:'g4',text:'Look under the car for rust, oil leaks or damage',warn:null},
                   {id:'g5',text:'Check panel gaps are even — inconsistency suggests accident repair',warn:null},
                   {id:'g6',text:'Test all electrics — windows, mirrors, lights, AC',warn:null},
-                  {id:'g7',text:'Ask for and inspect the service history stamps or receipts',warn:null},
+                  {id:'g7',text:'Ask for and inspect service history stamps or receipts',warn:null},
                   {id:'g8',text:'Test brakes firmly at low speed — any pulling or grinding?',warn:null},
                   {id:'g9',text:'Check no warning lights on after the engine warms up',warn:null},
                 ].map(item => (
@@ -299,7 +357,7 @@ export default function Review() {
               <div className={styles.dropHeader} onClick={() => toggleDrop(drop.id)}>
                 <div className={styles.dropLeft}>
                   <span className={styles.dropTitle}>{drop.title}</span>
-                  <span className={`${styles.badge} ${styles['badge-' + drop.badgeType]}`}>{drop.badge}</span>
+                  <span className={`${styles.badge} ${styles['badge-'+drop.badgeType]}`}>{drop.badge}</span>
                 </div>
                 <svg className={`${styles.arrow} ${openDrops[drop.id] ? styles.arrowOpen : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </div>
@@ -308,7 +366,6 @@ export default function Review() {
           ))}
 
           <div className={styles.divider}></div>
-
           <p className={styles.altLabel}>Better alternatives at this price</p>
           {result.alternatives?.map((alt, i) => (
             <div key={i} className={styles.altCard}>
@@ -323,9 +380,11 @@ export default function Review() {
             </div>
           ))}
 
-          <button className="btn-ghost" style={{marginTop:'1.5rem'}} onClick={() => { setStep('input'); setResult(null); setSaved(false); setTracked(false); setChecked({}) }}>
-            ← Review another car
-          </button>
+          <button className="btn-ghost" style={{marginTop:'1.5rem'}} onClick={() => {
+            setStep('input'); setResult(null); setSaved(false); setTracked(false)
+            setChecked({}); setSavedToAccount(false); setShowSignupNudge(false)
+            sessionStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_INPUT_KEY)
+          }}>← Review another car</button>
         </div>
       </div>
     )
@@ -337,15 +396,10 @@ export default function Review() {
       <div className={styles.wrap}>
         <h2>Review a car</h2>
         <p className={styles.sub}>Search for the car you're considering — we'll tell you if it's worth it.</p>
-
         <div className="field">
           <label>Search for a car</label>
-          <CarSearch
-            onSelect={setSelectedCar}
-            selected={selectedCar?.full}
-          />
+          <CarSearch onSelect={setSelectedCar} selected={selectedCar?.full} />
         </div>
-
         <div className="row2">
           <div className="field">
             <label>Year</label>
@@ -359,7 +413,6 @@ export default function Review() {
             <input type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="e.g. 45000" />
           </div>
         </div>
-
         <div className="row2">
           <div className="field">
             <label>Asking price (£)</label>
@@ -376,16 +429,12 @@ export default function Review() {
             </select>
           </div>
         </div>
-
         <div className="field">
           <label>Anything you noticed? (optional)</label>
           <textarea value={concerns} onChange={e => setConcerns(e.target.value)} placeholder="e.g. Incomplete service history, scratch on bumper..." />
         </div>
-
         {error && <p className={styles.error}>{error}</p>}
-        <button className="btn-primary" onClick={runReview} disabled={!selectedCar}>
-          Get my verdict →
-        </button>
+        <button className="btn-primary" onClick={runReview} disabled={!selectedCar}>Get my verdict →</button>
         {!selectedCar && <p style={{fontSize:'12px',color:'var(--muted)',textAlign:'center',marginTop:'0.5rem'}}>Select a car above to continue</p>}
       </div>
     </div>
