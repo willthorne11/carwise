@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [searches, setSearches] = useState([])
   const [fetching, setFetching] = useState(true)
   const [tab, setTab] = useState('all')
+  const [fetchError, setFetchError] = useState('')
 
   useEffect(() => {
     if (!loading && !user) { router.push('/auth'); return }
@@ -18,14 +19,27 @@ export default function Dashboard() {
   }, [user, loading])
 
   const fetchSearches = async () => {
-    const { data, error } = await supabase
-      .from('searches')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('searches')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
 
-    if (!error) setSearches(data || [])
-    setFetching(false)
+      if (error) {
+        console.error('Fetch error:', error)
+        setFetchError(error.message)
+        setSearches([])
+      } else {
+        setSearches(data || [])
+      }
+    } catch (e) {
+      console.error('Unexpected error:', e)
+      setFetchError(e.message)
+      setSearches([])
+    } finally {
+      setFetching(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -34,8 +48,12 @@ export default function Dashboard() {
   }
 
   const deleteSearch = async (id) => {
-    await supabase.from('searches').delete().eq('id', id)
-    setSearches(prev => prev.filter(s => s.id !== id))
+    try {
+      await supabase.from('searches').delete().eq('id', id)
+      setSearches(prev => prev.filter(s => s.id !== id))
+    } catch (e) {
+      console.error('Delete error:', e)
+    }
   }
 
   const filtered = tab === 'all' ? searches : searches.filter(s => s.type === tab)
@@ -62,7 +80,7 @@ export default function Dashboard() {
           <div className={styles.headerActions}>
             <button className={styles.mfaBtn} onClick={() => router.push('/mfa-setup')}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Set up 2FA
+              2FA
             </button>
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
           </div>
@@ -79,18 +97,24 @@ export default function Dashboard() {
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>{searches.length}</div>
-            <div className={styles.statLabel}>Total searches</div>
+            <div className={styles.statLabel}>Total</div>
           </div>
         </div>
 
         <div className={styles.actions}>
-          <button className="btn-primary" style={{flex: 1}} onClick={() => router.push('/shortlist')}>
-            New shortlist →
+          <button className="btn-primary" style={{flex: 1}} onClick={() => router.push('/review')}>
+            Review a car →
           </button>
-          <button className="btn-ghost" style={{flex: 1}} onClick={() => router.push('/review')}>
-            Review a car
+          <button className="btn-ghost" style={{flex: 1}} onClick={() => router.push('/shortlist')}>
+            Build a shortlist
           </button>
         </div>
+
+        {fetchError && (
+          <div style={{background:'rgba(248,113,113,0.1)',border:'0.5px solid rgba(248,113,113,0.3)',color:'var(--danger)',padding:'0.75rem 1rem',borderRadius:'8px',marginBottom:'1rem',fontSize:'13px'}}>
+            Could not load searches: {fetchError}
+          </div>
+        )}
 
         <div className={styles.tabs}>
           {['all', 'shortlist', 'review'].map(t => (
@@ -102,17 +126,26 @@ export default function Dashboard() {
 
         {filtered.length === 0 ? (
           <div className={styles.empty}>
-            <p>No {tab === 'all' ? 'searches' : tab + 's'} yet.</p>
-            <button className="btn-primary" style={{marginTop: '1rem'}} onClick={() => router.push(tab === 'review' ? '/review' : '/shortlist')}>
+            <p>{fetchError ? 'Could not load your searches.' : `No ${tab === 'all' ? 'searches' : tab + 's'} yet.`}</p>
+            <button className="btn-primary" style={{marginTop: '1rem', maxWidth: '200px', margin: '1rem auto 0'}}
+              onClick={() => router.push(tab === 'review' ? '/review' : '/shortlist')}>
               {tab === 'review' ? 'Review a car →' : 'Build a shortlist →'}
             </button>
           </div>
         ) : (
           <div className={styles.searchList}>
             {filtered.map(s => {
-              const input = JSON.parse(s.input || '{}')
-              const result = JSON.parse(s.result || '{}')
-              const date = new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              let input = {}
+              let result = {}
+
+              try { input = typeof s.input === 'string' ? JSON.parse(s.input) : (s.input || {}) } catch (e) {}
+              try { result = typeof s.result === 'string' ? JSON.parse(s.result) : (s.result || {}) } catch (e) {}
+
+              const date = new Date(s.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric'
+              })
+
+              const resultArr = Array.isArray(result) ? result : []
 
               return (
                 <div key={s.id} className={styles.searchCard}>
@@ -122,7 +155,7 @@ export default function Dashboard() {
                       <div className={styles.searchTitle}>
                         {s.type === 'review'
                           ? `${input.year || ''} ${input.make || ''} ${input.model || ''}`.trim() || 'Car review'
-                          : `Up to £${parseInt(input.budget || 0).toLocaleString()} · ${input.size || 5} cars`
+                          : `£${parseInt(input.minBudget || 0).toLocaleString()}–£${parseInt(input.maxBudget || 0).toLocaleString()} · ${input.size || 5} cars`
                         }
                       </div>
                       <div className={styles.searchDate}>{date}</div>
@@ -143,18 +176,23 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  {s.type === 'shortlist' && Array.isArray(result) && (
+                  {s.type === 'shortlist' && resultArr.length > 0 && (
                     <div className={styles.shortlistPreview}>
-                      {result.slice(0, 3).map((car, i) => (
+                      {resultArr.slice(0, 3).map((car, i) => (
                         <span key={i} className={styles.carPill}>{car.make} {car.model}</span>
                       ))}
-                      {result.length > 3 && <span className={styles.morePill}>+{result.length - 3} more</span>}
+                      {resultArr.length > 3 && <span className={styles.morePill}>+{resultArr.length - 3} more</span>}
                     </div>
                   )}
 
                   <button className={styles.viewBtn} onClick={() => {
                     if (s.type === 'review') {
-                      const params = new URLSearchParams({ make: input.make || '', model: input.model || '', year: input.year || '', price: input.price || '' })
+                      const params = new URLSearchParams({
+                        make: input.make || '',
+                        model: input.model || '',
+                        year: input.year || '',
+                        price: input.price || ''
+                      })
                       router.push(`/review?${params}`)
                     } else {
                       router.push('/shortlist')
