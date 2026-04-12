@@ -17,14 +17,14 @@
 .active { background: var(--surface2); border-color: var(--border2); color: var(--text); }
 .done { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.3); color: var(--success); }
 
-.optGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+.optGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
 .opt { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1rem; cursor: pointer; transition: all 0.15s; text-align: left; }
 .opt:hover { border-color: var(--text); }
 .selected { border: 2px solid var(--accent) !important; }
 .optTitle { font-size: 14px; font-weight: 500; margin-bottom: 2px; color: var(--text); }
 .optSub { font-size: 12px; color: var(--muted); }
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
 .chip { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
 .chip:hover { border-color: var(--text); }
 .chipSelected { border: 2px solid var(--accent) !important; }
@@ -36,166 +36,37 @@
 .sizeNum { font-size: 28px; font-weight: 500; }
 .sizeLabel { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-.nav { display: flex; gap: 10px; margin-top: 0.5rem; }
-.nav .btn-ghost { flex: 0 0 auto; width: auto; padding: 0.75rem 1.25rem; }
-.nav .btn-primary { flex: 1; }
-
+.nav { display: flex; gap: 10px; margin-top: 0.75rem; }
 .error { color: var(--danger); font-size: 13px; margin-bottom: 0.75rem; }
 
 .resultsHeader { margin-bottom: 1.25rem; }
 .resultsHeader h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin: 0.25rem 0; }
 .resultsSub { font-size: 14px; color: var(--muted); }
 
-.signupNudge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 0.9rem 1rem;
-  margin-bottom: 1rem;
-  animation: slideIn 0.3s ease-out;
-}
+.savedBanner { display: flex; align-items: center; gap: 8px; background: rgba(74,222,128,0.1); border: 0.5px solid rgba(74,222,128,0.3); color: var(--success); font-size: 13px; font-weight: 500; padding: 0.7rem 1rem; border-radius: var(--radius); margin-bottom: 1rem; }
 
+.signupNudge { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 0.9rem 1rem; margin-bottom: 1rem; animation: slideIn 0.3s ease-out; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-
 .nudgeText { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .nudgeText strong { font-size: 13px; font-weight: 500; color: var(--text); }
 .nudgeText span { font-size: 12px; color: var(--muted); }
-
-.nudgeBtn {
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: var(--radius-full);
-  padding: 0.5rem 1rem;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
+.nudgeBtn { background: var(--accent); color: #000; border: none; border-radius: var(--radius-full); padding: 0.5rem 1rem; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; transition: opacity 0.15s; }
 .nudgeBtn:hover { opacity: 0.85; }
-
-.nudgeDismiss {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
+.nudgeDismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px; flex-shrink: 0; }
 .nudgeDismiss:hover { color: var(--text); }
 
 .carCard { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 0.75rem; transition: border-color 0.15s; }
 .carCard:hover { border-color: var(--border2); }
-
 .carTop { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
 .carRank { width: 26px; height: 26px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); color: var(--muted); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .carInfo { flex: 1; }
 .carName { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
 .carMeta { font-size: 12px; color: var(--muted); }
 .carScore { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--muted); }
-
 .carReason { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; padding: 8px 10px; background: var(--surface2); border-radius: var(--radius-sm); }
 .carTags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-
 .carActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-.reviewBtn {
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-full);
-  padding: 0.55rem;
-  font-size: 13px;
-  cursor: pointer;
-  color: #000;
-  font-weight: 500;
-  transition: opacity 0.15s;
-  font-family: inherit;
-}
-
+.reviewBtn { background: var(--accent); border: none; border-radius: var(--radius-full); padding: 0.55rem; font-size: 13px; cursor: pointer; color: #000; font-weight: 500; transition: opacity 0.15s; font-family: inherit; }
 .reviewBtn:hover { opacity: 0.85; }
-
-.atBtn {
-  display: block;
-  text-align: center;
-  background: transparent;
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius-full);
-  padding: 0.55rem;
-  font-size: 13px;
-  color: var(--muted);
-  transition: all 0.15s;
-  text-decoration: none;
-}
-
+.atBtn { display: block; text-align: center; background: transparent; border: 0.5px solid var(--border2); border-radius: var(--radius-full); padding: 0.55rem; font-size: 13px; color: var(--muted); transition: all 0.15s; text-decoration: none; }
 .atBtn:hover { border-color: var(--text); color: var(--text); }
-/* Add these two blocks to the bottom of your existing Shortlist.module.css */
-
-.savedBanner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(74,222,128,0.1);
-  border: 0.5px solid rgba(74,222,128,0.3);
-  color: var(--success);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0.7rem 1rem;
-  border-radius: var(--radius);
-  margin-bottom: 1rem;
-}
-
-.signupNudge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--surface);
-  border: 0.5px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 0.9rem 1rem;
-  margin-bottom: 1rem;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-
-.nudgeText { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.nudgeText strong { font-size: 13px; font-weight: 500; color: var(--text); }
-.nudgeText span { font-size: 12px; color: var(--muted); }
-
-.nudgeBtn {
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: var(--radius-full);
-  padding: 0.5rem 1rem;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
-.nudgeBtn:hover { opacity: 0.85; }
-
-.nudgeDismiss {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.nudgeDismiss:hover { color: var(--text); }
